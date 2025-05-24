@@ -1,13 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import StarRating from '../StarRating';
 import { API_KEY } from '../utils/constants';
 import Loader from './Loader';
+import useKey from '../hooks/useKey';
 
 function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched, watched, isWatchedSelected }) {
   const [movie, setMovie] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [userRating, setUserRating] = useState('');
   const [userReview, setUserReview] = useState('');
+
+  const countRatings = useRef(0);
+
+  useEffect(function () {
+    if (userRating) {
+      countRatings.current = countRatings.current + 1;
+      console.log(countRatings.current);
+    }
+  }, [userRating]);
 
   // Find watched movie data if it exists
   const watchedMovie = watched.find(movie => movie.imdbID === selectedId);
@@ -34,24 +44,15 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
       imdbRating: Number(imdbRating),
       runtime: runtime.split(" ")[0],
       userRating,
-      userReview
+      userReview,
+      countRatings: countRatings.current
     };
+
     onAddWatched(newMovie);
     onCloseMovie();
   }
 
-  useEffect(function () {
-    const callback = function (e) {
-      if (e.key === "Escape") {
-        onCloseMovie();
-      }
-    };
-    document.addEventListener("keydown", callback);
-    return function () {
-      document.removeEventListener("keydown", callback);
-    };
-  }, [onCloseMovie]);
-
+  useKey("Escape", onCloseMovie);
   useEffect(function () {
     async function getMovieDetails() {
       setIsLoading(true);
