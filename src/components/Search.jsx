@@ -1,30 +1,37 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 import useKey from '../hooks/useKey';
 
 function Search({ query, setQuery }) {
-  const inputEl = useRef(null);
+  const inputRef = useRef(null);
+
+  function handleSearch(e) {
+    const value = e.target.value;
+    setQuery(value);
+  }
 
   // Focus input when component mounts
   useEffect(function () {
-    inputEl.current.focus();
+    inputRef.current.focus();
   }, []);
 
   // Use the useKey hook to handle Enter key press
   useKey("Enter", function() {
-    if (document.activeElement === inputEl.current) return;
-    inputEl.current.focus();
+    if (document.activeElement === inputRef.current) return;
+    inputRef.current.focus();
     setQuery("");
   });
 
   return (
-    <input
-      ref={inputEl}
-      className="search"
-      type="text"
-      placeholder="Search movies..."
-      value={query}
-      onChange={(e) => setQuery(e.target.value)}
-    />
+    <div className="search-container">
+      <input
+        className="search"
+        type="text"
+        placeholder="Search movies..."
+        value={query}
+        onChange={handleSearch}
+        ref={inputRef}
+      />
+    </div>
   );
 }
 

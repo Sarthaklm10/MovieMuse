@@ -1,9 +1,9 @@
 import React from 'react';
 
-function Logo() {
+function Logo({ onHomeClick }) {
     return (
-        <div className="logo">
-            <span role="img">🍿</span>
+        <div className="logo" onClick={onHomeClick} style={{ cursor: 'pointer' }} title="Go to homepage">
+            <span role="img">🎬</span>
             <h1>MovieMuse</h1>
         </div>
     );

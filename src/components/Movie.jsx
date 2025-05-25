@@ -6,7 +6,7 @@ function Movie({ movie, onSelectMovie }) {
   const year = movie.Year || movie.year;
 
   return (
-    <li onClick={() => onSelectMovie(movie.imdbID)}>
+    <li onClick={() => onSelectMovie(movie.imdbID)} data-movie-id={movie.imdbID}>
       {poster === "N/A" ? (
         <div className="no-poster">{title}</div>
       ) : (

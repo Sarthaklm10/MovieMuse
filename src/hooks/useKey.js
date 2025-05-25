@@ -12,11 +12,10 @@ export default function useKey(key, callback) {
         callback();
       }
     }
-
     // Add event listener when the component mounts
     document.addEventListener('keydown', handleKeyDown);
 
-    // Cleanup: remove event listener when the component unmounts
+    // Cleanup: remove event listener when component unmounts
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };

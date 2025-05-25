@@ -56,7 +56,7 @@ export default function StarRating({
     const textStyle = {
         lineHeight: "1.1",
         margin: "0",
-        color: color,
+        color: tempRating ? "var(--color-star-hover)" : color,
         fontSize: `${size * 0.8}px`,
         fontWeight: "600",
         minWidth: `${size * 1.5}px`,
@@ -74,6 +74,7 @@ export default function StarRating({
                         onHoverLeave={() => handleHoverLeave()}
                         color={tempRating ? "var(--color-star-hover)" : color}
                         size={size}
+                        isHovering={tempRating > 0}
                     />
                 ))}
             </div>
@@ -85,22 +86,25 @@ export default function StarRating({
     )
 }
 
-function Star({ onRate, full, onHoverIn, onHoverLeave, color, size }) {
+function Star({ onRate, full, onHoverIn, onHoverLeave, color, size, isHovering }) {
     const starStyle = {
         width: `${size}px`,
         height: `${size}px`,
         display: "block",
         cursor: "pointer",
-        transition: "transform 0.2s",
+        transition: "all 0.2s ease",
+        filter: isHovering && full ? "drop-shadow(0 0 3px var(--color-star-hover))" : "none",
     }
 
     const handleMouseEnter = (e) => {
         e.currentTarget.style.transform = "scale(1.15)";
+        e.currentTarget.style.filter = "drop-shadow(0 0 3px var(--color-star-hover))";
         onHoverIn();
     }
 
     const handleMouseLeave = (e) => {
         e.currentTarget.style.transform = "scale(1)";
+        e.currentTarget.style.filter = "none";
         onHoverLeave();
     }
 
