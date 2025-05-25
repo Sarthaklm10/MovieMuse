@@ -226,7 +226,6 @@ export default function App() {
     setIsGlobalLoading(true);
     
     // Scroll to top smoothly whenever a new movie is selected
-    // Use a more aggressive scroll for better user experience
     window.scrollTo({ 
       top: 0, 
       behavior: 'smooth'
@@ -246,26 +245,23 @@ export default function App() {
               `http://www.omdbapi.com/?apikey=${API_KEY}&s=${encodeURIComponent(movie.Title)}&type=movie`
             );
             
-            if (searchRes.ok) {
-              const searchData = await searchRes.json();
-              
-              if (searchData.Response === "True" && searchData.Search && searchData.Search.length > 0) {
-                // Use the first result
-                const firstResult = searchData.Search[0];
-                setSelectedId(firstResult.imdbID);
-                setIsWatchedSelected(isWatched);
-              } else {
-                console.error("No search results found");
-                alert("Could not find this movie. Please try another one.");
-                setIsGlobalLoading(false);
-              }
+            if (!searchRes.ok) {
+              throw new Error(`API error: ${searchRes.status}`);
+            }
+            
+            const searchData = await searchRes.json();
+            
+            if (searchData.Response === "True" && searchData.Search && searchData.Search.length > 0) {
+              // Use the first result
+              const firstResult = searchData.Search[0];
+              setSelectedId(firstResult.imdbID);
+              setIsWatchedSelected(isWatched);
             } else {
-              console.error("API error");
-              setIsGlobalLoading(false);
+              throw new Error(searchData.Error || "No search results found");
             }
           } catch (err) {
             console.error("Error finding movie by title:", err);
-            alert("Error loading movie. Please try again.");
+            alert(`Could not find this movie: ${err.message}. Please try another one.`);
             setIsGlobalLoading(false);
           } finally {
             // Hide loading after a shorter time

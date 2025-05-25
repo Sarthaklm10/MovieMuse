@@ -216,6 +216,7 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
     return () => {
       if (successMessageTimerRef.current) {
         clearTimeout(successMessageTimerRef.current);
+        successMessageTimerRef.current = null;
       }
     };
   }, []);
@@ -230,6 +231,8 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
     // Set loading state immediately on selectedId change
     setIsLoading(true);
     setFadeIn(false);
+    // Reset success message state to prevent duplicate messages
+    setShowSuccessMessage(false);
     
     // Only scroll to top when switching movies, not when submitting review
     if (detailsContainerRef.current) {
@@ -453,7 +456,11 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
     // Clear any existing timer
     if (successMessageTimerRef.current) {
       clearTimeout(successMessageTimerRef.current);
+      successMessageTimerRef.current = null;
     }
+    
+    // First ensure success message is hidden before showing it again
+    setShowSuccessMessage(false);
     
     // First scroll to top immediately with auto behavior
     window.scrollTo({
@@ -480,22 +487,13 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
 
   // Component to render the success message with animation
   const SuccessMessage = () => {
-    // When this component mounts, it will show the message and auto-hide it
-    useEffect(() => {
-      const timer = setTimeout(() => {
-        setShowSuccessMessage(false);
-      }, 2000);
-      
-      return () => clearTimeout(timer);
-    }, []);
-    
     return (
-      <>
+      <div className="success-message-container">
         <div className="success-message-backdrop"></div>
         <div className="success-message">
           {successMessageText}
         </div>
-      </>
+      </div>
     );
   };
 
