@@ -75,8 +75,10 @@ moviemuse/
 
 4. Create a `.env` file in the root directory and add your API keys:
    ```
-   REACT_APP_OMDB_API_KEY=your_omdb_api_key
-   REACT_APP_TMDB_API_KEY=your_tmdb_api_key
+   REACT_APP_OMDB_API_KEY=your_omdb_api_key_here
+   REACT_APP_TMDB_API_KEY=your_tmdb_api_key_here
+   REACT_APP_TMDB_BASE_URL=https://api.themoviedb.org/3
+   REACT_APP_TMDB_IMAGE_URL=https://image.tmdb.org/t/p/w500
    ```
 
 5. Start the development server:
@@ -95,3 +97,24 @@ moviemuse/
 5. **View Similar Movies**: Scroll down in movie details to see similar movie recommendations
 6. **Check Your Watchlist**: Your watched movies appear in the right panel with ratings
 7. **Toggle Theme**: Click the sun/moon icon in the navigation bar to switch between light and dark themes
+
+## Setup
+
+### Environment Variables
+
+This project uses environment variables to store API keys securely. To run the project locally:
+
+1. Create a `.env` file in the root directory
+2. Add the following variables to your `.env` file:
+
+```
+REACT_APP_OMDB_API_KEY=your_omdb_api_key_here
+REACT_APP_TMDB_API_KEY=your_tmdb_api_key_here
+REACT_APP_TMDB_BASE_URL=https://api.themoviedb.org/3
+REACT_APP_TMDB_IMAGE_URL=https://image.tmdb.org/t/p/w500
+```
+
+3. Replace `your_omdb_api_key_here` with your OMDB API key (get one at https://www.omdbapi.com/apikey.aspx)
+4. Replace `your_tmdb_api_key_here` with your TMDB API key (get one at https://www.themoviedb.org/settings/api)
+
+A `.env.example` file is provided as a template.

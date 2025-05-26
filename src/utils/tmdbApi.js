@@ -1,4 +1,4 @@
-import { TMDB_API_KEY, TMDB_BASE_URL, API_KEY } from "./constants";
+import { TMDB_API_KEY, TMDB_BASE_URL, API_KEY, TMDB_IMAGE_URL, OMDB_BASE_URL } from "./constants";
 
 // Common genre IDs for TMDB API
 export const TMDB_GENRES = {
@@ -172,7 +172,7 @@ export async function testApiConnectivity() {
   
   // Test OMDB
   try {
-    const omdbResp = await fetch(`http://www.omdbapi.com/?apikey=${API_KEY}&s=action&type=movie&page=1`);
+    const omdbResp = await fetch(`${OMDB_BASE_URL}/?apikey=${API_KEY}&s=action&type=movie&page=1`);
     
     if (!omdbResp.ok) {
       results.omdb = { status: 'error', message: `HTTP error: ${omdbResp.status} ${omdbResp.statusText}` };

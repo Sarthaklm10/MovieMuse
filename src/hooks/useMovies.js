@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { API_KEY } from "../utils/constants";
+import { API_KEY, OMDB_BASE_URL } from "../utils/constants";
 
 // Simple cache to store results
 const searchCache = new Map();
@@ -23,7 +23,7 @@ export default function useMovies(query) {
         }
 
         const res = await fetch(
-            `http://www.omdbapi.com/?apikey=${API_KEY}&s=${searchQuery}`,
+            `${OMDB_BASE_URL}/?apikey=${API_KEY}&s=${searchQuery}`,
             { signal: controller.signal }
         );
 

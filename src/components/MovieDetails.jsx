@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import StarRating from '../StarRating';
-import { API_KEY } from '../utils/constants';
+import { API_KEY, OMDB_BASE_URL } from '../utils/constants';
 import Loader from './Loader';
 import { findTMDBId, getSimilarMovies, convertTMDBMovie } from '../utils/tmdbApi';
 
@@ -118,7 +118,7 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
           try {
             // console.log(`OMDB: Searching for genre "${genreItem}" with key ${API_KEY.substring(0, 3)}...`);
             const res = await fetch(
-              `http://www.omdbapi.com/?apikey=${API_KEY}&s=${encodeURIComponent(genreItem)}&type=movie&page=1`,
+              `${OMDB_BASE_URL}/?apikey=${API_KEY}&s=${encodeURIComponent(genreItem)}&type=movie&page=1`,
               { signal: controllerRef.current?.signal }
             );
             
@@ -187,7 +187,7 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
 
     try {
       const res = await fetch(
-        `http://www.omdbapi.com/?apikey=${API_KEY}&i=${selectedId}&plot=full`,
+        `${OMDB_BASE_URL}/?apikey=${API_KEY}&i=${selectedId}&plot=full`,
         { signal: controllerRef.current.signal }
       );
 
@@ -307,7 +307,7 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
     async function getMovieDetails() {
       try {
         const res = await fetch(
-          `http://www.omdbapi.com/?apikey=${API_KEY}&i=${selectedId}`,
+          `${OMDB_BASE_URL}/?apikey=${API_KEY}&i=${selectedId}`,
           { signal: controllerRef.current.signal }
         );
 
@@ -367,7 +367,7 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
           try {
             // Search OMDB for this movie
             const searchRes = await fetch(
-              `http://www.omdbapi.com/?apikey=${API_KEY}&s=${encodeURIComponent(movie.Title)}&type=movie`
+              `${OMDB_BASE_URL}/?apikey=${API_KEY}&s=${encodeURIComponent(movie.Title)}&type=movie`
             );
             
             if (searchRes.ok) {

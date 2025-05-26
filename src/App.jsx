@@ -10,7 +10,7 @@ import MovieDetails from "./components/MovieDetails";
 import WatchedSummary from "./components/WatchedSummary";
 import WatchedList from "./components/WatchedList";
 import Loader from "./components/Loader";
-import { API_KEY } from "./utils/constants";
+import { API_KEY, OMDB_BASE_URL } from "./utils/constants";
 import { findTMDBId, getRecommendations, convertTMDBMovie, getGenreId, discoverMoviesByGenre, testApiConnectivity } from "./utils/tmdbApi";
 import useMovies from "./hooks/useMovies";
 import useLocalStorage from "./hooks/useLocalStorage";
@@ -173,7 +173,7 @@ export default function App() {
           
           try {
             const res = await fetch(
-              `http://www.omdbapi.com/?apikey=${API_KEY}&s=${encodeURIComponent(fallbackGenre)}&type=movie&page=1`
+              `${OMDB_BASE_URL}/?apikey=${API_KEY}&s=${encodeURIComponent(fallbackGenre)}&type=movie&page=1`
             );
             
             if (!res.ok) {
@@ -242,7 +242,7 @@ export default function App() {
           try {
             // Direct search is faster than title match
             const searchRes = await fetch(
-              `http://www.omdbapi.com/?apikey=${API_KEY}&s=${encodeURIComponent(movie.Title)}&type=movie`
+              `${OMDB_BASE_URL}/?apikey=${API_KEY}&s=${encodeURIComponent(movie.Title)}&type=movie`
             );
             
             if (!searchRes.ok) {
