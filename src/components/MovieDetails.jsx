@@ -18,8 +18,6 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
   const [userRating, setUserRating] = useState('');
   const [userReview, setUserReview] = useState('');
   const [fadeIn, setFadeIn] = useState(false);
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-  const [successMessageText, setSuccessMessageText] = useState('');
   const [isReviewSubmitted, setIsReviewSubmitted] = useState(false);
   const [isFullPlot, setIsFullPlot] = useState(false);
   const [fullPlotText, setFullPlotText] = useState('');
@@ -27,7 +25,6 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
   const [similarMovies, setSimilarMovies] = useState([]);
   const [isLoadingSimilar, setIsLoadingSimilar] = useState(false);
   const controllerRef = useRef(null);
-  const successMessageTimerRef = useRef(null);
 
   // TMDB ID for current movie
   const [tmdbId, setTmdbId] = useState(null);
@@ -59,122 +56,82 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
 
   // Fetch similar movies using TMDB API
   const fetchSimilarMovies = useCallback(async () => {
-    // Check if we have movie title to search
-    if (!title) return;
-
+    if (!title) return;  // No title, no search
+    
     setIsLoadingSimilar(true);
-    // console.log(`Fetching similar movies for: ${title}`);
-
+    
     try {
-      // First check if we already have a TMDB ID for this movie
-      let movieTmdbId = tmdbIdCache[selectedId];
+      // Step 1: Get TMDB ID (from cache or API)
+      let movieTmdbId = tmdbIdCache[selectedId] || await findTMDBId(selectedId);
       
-      if (!movieTmdbId) {
-        // Find TMDB ID using IMDB ID
-        movieTmdbId = await findTMDBId(selectedId);
-        
-        if (movieTmdbId) {
-          // console.log(`Found TMDB ID for ${title}: ${movieTmdbId}`);
-          // Save to cache
-          tmdbIdCache[selectedId] = movieTmdbId;
-          setTmdbId(movieTmdbId);
-        } else {
-          // console.log(`No TMDB ID found for ${title}, using fallback`);
-        }
+      // Save ID to cache if found
+      if (movieTmdbId && !tmdbIdCache[selectedId]) {
+        tmdbIdCache[selectedId] = movieTmdbId;
+        setTmdbId(movieTmdbId);
       }
 
+      // Step 2: Get similar movies (from cache or APIs)
       let similarResults = [];
       
-      // If we have a TMDB ID, get similar movies
-      if (movieTmdbId) {
-        // Check cache first
-        if (similarMoviesCache[movieTmdbId]) {
-          // console.log(`Using cached similar movies for ${title}`);
-          similarResults = similarMoviesCache[movieTmdbId];
-        } else {
-          // console.log(`Fetching similar movies from TMDB for ID ${movieTmdbId}`);
-          // Get similar movies from TMDB
-          const tmdbSimilarMovies = await getSimilarMovies(movieTmdbId);
-          // console.log(`Found ${tmdbSimilarMovies.length} similar movies from TMDB`);
-          
-          // Convert to our app's format
-          similarResults = tmdbSimilarMovies.map(convertTMDBMovie);
-          
-          // Cache results
-          if (similarResults.length > 0) {
-            similarMoviesCache[movieTmdbId] = similarResults;
-          }
+      // Check cache first
+      if (movieTmdbId && similarMoviesCache[movieTmdbId]) {
+        similarResults = similarMoviesCache[movieTmdbId];
+      }
+      // Otherwise fetch from TMDB if we have an ID
+      else if (movieTmdbId) {
+        const tmdbSimilarMovies = await getSimilarMovies(movieTmdbId);
+        similarResults = tmdbSimilarMovies.map(convertTMDBMovie);
+        
+        // Cache the results
+        if (similarResults.length > 0) {
+          similarMoviesCache[movieTmdbId] = similarResults;
         }
       }
       
-      // If we failed to get similar movies from TMDB or don't have enough, fall back to OMDB
+      // Step 3: Fall back to genre-based search if needed
       if (similarResults.length < 3 && genre) {
-        // console.log(`Not enough TMDB similar movies, falling back to OMDB genre search`);
-        // Split genres and get up to 2 genres for better matching
+        // Get up to 2 genres for better matching
         const genres = genre.split(',').map(g => g.trim()).slice(0, 2);
+        const seenIds = new Set(similarResults.map(m => m.imdbID.replace('tmdb-', '')));
         
-        // Create separate promises for each genre to search in parallel
-        const searchPromises = genres.map(async (genreItem) => {
+        // Search each genre in parallel
+        const results = await Promise.all(genres.map(async (genreItem) => {
           try {
-            // console.log(`OMDB: Searching for genre "${genreItem}" with key ${API_KEY.substring(0, 3)}...`);
             const res = await fetch(
               `${OMDB_BASE_URL}/?apikey=${API_KEY}&s=${encodeURIComponent(genreItem)}&type=movie&page=1`,
               { signal: controllerRef.current?.signal }
             );
             
-            if (!res.ok) {
-              console.error(`OMDB API error for genre "${genreItem}": ${res.status} ${res.statusText}`);
-              return [];
-            }
+            if (!res.ok) return [];
             
             const data = await res.json();
-            if (data.Response === "False") {
-              // console.log(`OMDB returned error: ${data.Error || "Unknown error"}`);
-              return [];
-            }
-            
-            // console.log(`OMDB search for genre "${genreItem}" returned: ${data.Search?.length || 0} movies`);
-            return data.Search || [];
+            return data.Response === "True" ? data.Search || [] : [];
           } catch (err) {
-            if (err.name !== "AbortError") {
-              console.error(`Error searching OMDB for genre "${genreItem}":`, err);
-            }
-            return [];
+            return [];  // Return empty on error
+          }
+        }));
+        
+        // Add unique movies to results
+        results.flat().forEach(movie => {
+          if (movie && !seenIds.has(movie.imdbID) && movie.imdbID !== selectedId) {
+            seenIds.add(movie.imdbID);
+            similarResults.push(movie);
           }
         });
-        
-        // Wait for all searches to complete
-        const results = await Promise.all(searchPromises);
-        
-        // Combine results, avoid duplicates with TMDB results
-        const seenIds = new Set(similarResults.map(m => m.imdbID.replace('tmdb-', '')));
-        
-        results.forEach(movieList => {
-          movieList.forEach(movie => {
-            if (!seenIds.has(movie.imdbID) && movie.imdbID !== selectedId) {
-              seenIds.add(movie.imdbID);
-              similarResults.push(movie);
-            }
-          });
-        });
-
-        // console.log(`After OMDB fallback, total similar movies: ${similarResults.length}`);
       }
       
-      // Set the combined results
-      const validSimilarMovies = similarResults.filter(movie => 
-        movie && movie.imdbID && movie.Title && movie.Poster
-      ).slice(0, 6);
+      // Step 4: Filter and set results
+      const validSimilarMovies = similarResults
+        .filter(movie => movie && movie.imdbID && movie.Title && movie.Poster)
+        .slice(0, 6);  // Limit to 6 similar movies
       
       setSimilarMovies(validSimilarMovies);
     } catch (err) {
-      if (err.name !== "AbortError") {
-        console.error("Error fetching similar movies:", err);
-      }
+      console.error("Error fetching similar movies:", err);
     } finally {
       setIsLoadingSimilar(false);
     }
-  }, [genre, selectedId, title, year, tmdbId]);
+  }, [genre, selectedId, title]);
 
   // Fetch full plot when requested
   const fetchFullPlot = useCallback(async () => {
@@ -211,16 +168,6 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
     }
   }, [selectedId, plot, fullPlotText]);
 
-  // Clean up timer on unmount
-  useEffect(() => {
-    return () => {
-      if (successMessageTimerRef.current) {
-        clearTimeout(successMessageTimerRef.current);
-        successMessageTimerRef.current = null;
-      }
-    };
-  }, []);
-
   // Reset states when new movie is selected
   useEffect(() => {
     setUserRating(watchedMovie?.userRating || '');
@@ -231,8 +178,6 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
     // Set loading state immediately on selectedId change
     setIsLoading(true);
     setFadeIn(false);
-    // Reset success message state to prevent duplicate messages
-    setShowSuccessMessage(false);
     
     // Only scroll to top when switching movies, not when submitting review
     if (detailsContainerRef.current) {
@@ -446,55 +391,20 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
       Genre: genre // Store the genre for better recommendations
     };
     onAddWatched(newMovie);
-    
-    // Set appropriate message text
-    setSuccessMessageText(isUpdating ? "RATING UPDATED! 🌟" : "MOVIE ADDED TO BOOKMARKS! 🎉");
 
     // Mark review as submitted to hide the review form
     setIsReviewSubmitted(true);
 
-    // Clear any existing timer
-    if (successMessageTimerRef.current) {
-      clearTimeout(successMessageTimerRef.current);
-      successMessageTimerRef.current = null;
-    }
-    
-    // First ensure success message is hidden before showing it again
-    setShowSuccessMessage(false);
-    
-    // First scroll to top immediately with auto behavior
+    // Scroll to top with smooth behavior
     window.scrollTo({
       top: 0,
-      behavior: 'auto'  // Use 'auto' instead of 'smooth' for immediate scroll
+      behavior: 'smooth'
     });
-    
-    // THEN show the message after a small delay to ensure scroll is complete
-    setTimeout(() => {
-      setShowSuccessMessage(true);
-      
-      // Hide message after 2 seconds
-      successMessageTimerRef.current = setTimeout(() => {
-        setShowSuccessMessage(false);
-      }, 2000);
-    }, 50);  // Small delay to ensure scroll completes first
-    
   }, [selectedId, title, year, poster, imdbRating, runtime, userRating, userReview, onAddWatched, genre, watched]);
 
   // Add height reservation for similar movies section to prevent layout shifts
   const similarMoviesSectionStyle = {
     minHeight: isLoadingSimilar ? '250px' : 'auto'
-  };
-
-  // Component to render the success message with animation
-  const SuccessMessage = () => {
-    return (
-      <div className="success-message-container">
-        <div className="success-message-backdrop"></div>
-        <div className="success-message">
-          {successMessageText}
-        </div>
-      </div>
-    );
   };
 
   // Skeleton component to maintain consistency
@@ -562,10 +472,6 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
         <SkeletonLoader />
       ) : (
         <>
-          {showSuccessMessage && (
-            <SuccessMessage />
-          )}
-
           <header>
             <div className="poster-container">
               <img src={poster} alt={`Poster of ${title}`} />
@@ -723,7 +629,7 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
               <div className="user-review">
                 <h3>Your Review</h3>
                 <p>{watchedMovie.userReview}</p>
-                {!isWatchedSelected && (
+                {!isWatchedSelected && watchedMovie?.userReview && (
                   <button 
                     className="btn-edit-review" 
                     onClick={() => setIsReviewSubmitted(false)}

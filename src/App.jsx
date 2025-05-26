@@ -45,7 +45,7 @@ export default function App() {
 
   // Function to get recommended movies based on bookmarked items
   const fetchRecommendedMovies = useCallback(async () => {
-    // If there are no watched movies or there is a search query, don't fetch recommendations
+    // Skip if no watched movies or if there's an active search
     if (watched.length === 0 || query) {
       setRecommendedMovies([]);
       return;
@@ -53,161 +53,113 @@ export default function App() {
 
     setIsLoadingRecommended(true);
     try {
-     
+      // Track movies we've already seen to avoid duplicates
+      const seenIds = new Set();
+      const watchedIds = watched.map(movie => movie.imdbID);
+      const allRecommendations = [];
+      
+      // Step 1: Try to get TMDB recommendations for the latest 3 watched movies
       const recentMovies = watched.slice(-3);
-
-      const recommendationPromises = [];
       
       for (const movie of recentMovies) {
-        // Check if we already have recommendations cached for this movie
+        // Skip if we already have recommendations for this movie
         if (recommendationCache[movie.imdbID]) {
-          recommendationPromises.push(Promise.resolve(recommendationCache[movie.imdbID]));
+          allRecommendations.push(...recommendationCache[movie.imdbID]);
           continue;
         }
         
-        // Find TMDB ID for this movie
+        // Get TMDB ID and recommendations
         const tmdbId = await findTMDBId(movie.imdbID);
+        if (!tmdbId) continue;
         
-        if (tmdbId) {
-          // Get recommendations from TMDB
-          const tmdbRecommendationsPromise = getRecommendations(tmdbId);
-          recommendationPromises.push(tmdbRecommendationsPromise);
+        const tmdbMovies = await getRecommendations(tmdbId);
+        const convertedMovies = tmdbMovies
+          .map(convertTMDBMovie)
+          .filter(movie => {
+            // Filter out invalid, already watched, or duplicate movies
+            if (!movie || !movie.imdbID || !movie.Title || movie.Poster === "N/A") return false;
+            
+            const id = movie.imdbID.replace('tmdb-', '');
+            if (watchedIds.includes(movie.imdbID) || seenIds.has(id)) return false;
+            
+            seenIds.add(id);
+            return true;
+          });
+        
+        // Cache and add to recommendations
+        if (convertedMovies.length > 0) {
+          recommendationCache[movie.imdbID] = convertedMovies;
+          allRecommendations.push(...convertedMovies);
         }
       }
       
-      // Wait for all recommendations to load
-      const recommendationResults = await Promise.all(recommendationPromises);
-      
-      // Combine and deduplicate recommendations
-      const allRecommendations = [];
-      const seenIds = new Set();
-      const watchedIds = watched.map(movie => movie.imdbID);
-      
-      // Process each batch of recommendations
-      for (let i = 0; i < recommendationResults.length && i < recentMovies.length; i++) {
-        const movies = recommendationResults[i] || [];
-        const sourceMovieId = recentMovies[i]?.imdbID;
-        
-        if (sourceMovieId) {
-          // Convert and filter results
-          const convertedMovies = movies
-            .map(convertTMDBMovie)
-            .filter(movie => {
-              // Skip invalid movies, already watched movies, and duplicates
-              if (!movie || !movie.imdbID || !movie.Title || movie.Poster === "N/A") {
-                return false;
-              }
-              
-              const tmdbId = movie.imdbID.replace('tmdb-', '');
-              if (watchedIds.includes(movie.imdbID) || seenIds.has(tmdbId)) {
-                return false;
-              }
-              seenIds.add(tmdbId);
-              return true;
-            });
-          
-          // Cache these recommendations
-          if (convertedMovies.length > 0) {
-            recommendationCache[sourceMovieId] = convertedMovies;
-            // Add to combined results
-            allRecommendations.push(...convertedMovies);
-          }
-        }
-      }
-      
-      // If we don't have enough recommendations from TMDB, fall back to genre-based discovery
+      // Step 2: If we don't have enough recommendations, try genre-based discovery
       if (allRecommendations.length < 3) {
-        // Extract all genres from watched movies
-        const allGenres = [];
+        // Collect unique genres from watched movies
+        const allGenres = [...new Set(
+          watched
+            .filter(movie => movie.Genre)
+            .flatMap(movie => movie.Genre.split(',').map(g => g.trim()))
+        )];
         
-        for (const movie of watched) {
-          if (movie.Genre) {
-            movie.Genre.split(',').forEach(genre => {
-              const trimmedGenre = genre.trim();
-              if (!allGenres.includes(trimmedGenre)) {
-                allGenres.push(trimmedGenre);
-              }
-            });
-          }
-        }
-        
-        // If we have any genres, use TMDB discover endpoint
         if (allGenres.length > 0) {
           // Pick a random genre from user preferences
           const randomGenre = allGenres[Math.floor(Math.random() * allGenres.length)];
+          const genreId = await getGenreId(randomGenre);
           
-          try {
-            // Convert genre name to TMDB genre ID
-            const genreId = await getGenreId(randomGenre);
+          if (genreId) {
+            // Get movies in this genre
+            const discoverResults = await discoverMoviesByGenre(genreId);
             
-            if (genreId) {
-              // Get popular movies in this genre using discover
-              const discoverResults = await discoverMoviesByGenre(genreId);
-              
-              // Convert and filter
-              const convertedMovies = discoverResults
-                .map(convertTMDBMovie)
-                .filter(movie => {
-                  // Skip watched movies and duplicates
-                  const tmdbId = movie.imdbID.replace('tmdb-', '');
-                  if (watchedIds.includes(movie.imdbID) || seenIds.has(tmdbId)) {
-                    return false;
-                  }
-                  seenIds.add(tmdbId);
-                  return true;
-                });
+            // Filter and add to recommendations
+            discoverResults
+              .map(convertTMDBMovie)
+              .filter(movie => {
+                if (!movie || !movie.imdbID) return false;
+                const id = movie.imdbID.replace('tmdb-', '');
+                if (watchedIds.includes(movie.imdbID) || seenIds.has(id)) return false;
                 
-                allRecommendations.push(...convertedMovies);
-            }
-          } catch (err) {
-            console.error("Error using TMDB discover:", err);
+                seenIds.add(id);
+                return true;
+              })
+              .forEach(movie => allRecommendations.push(movie));
           }
         }
         
-        // If we still don't have enough, fall back to OMDB
+        // Step 3: Fall back to OMDB if we still need more recommendations
         if (allRecommendations.length < 3) {
-          // Get a popular genre as fallback
           const fallbackGenre = allGenres.length > 0 ? 
-            allGenres[Math.floor(Math.random() * allGenres.length)] : 
-            "Drama";
+            allGenres[Math.floor(Math.random() * allGenres.length)] : "Drama";
           
           try {
             const res = await fetch(
               `${OMDB_BASE_URL}/?apikey=${API_KEY}&s=${encodeURIComponent(fallbackGenre)}&type=movie&page=1`
             );
             
-            if (!res.ok) {
-              console.error(`OMDB API error: ${res.status} ${res.statusText}`);
-              return;
-            }
-
-            const data = await res.json();
-            if (data.Response === "False") {
-              return;
-            }
-            
-            if (data.Response === "True" && data.Search) {
-              // Filter out watched movies and already added recommendations
-              data.Search.forEach(movie => {
-                if (!watchedIds.includes(movie.imdbID) && !seenIds.has(movie.imdbID)) {
-                  seenIds.add(movie.imdbID);
-                  allRecommendations.push(movie);
-                }
-              });
+            if (res.ok) {
+              const data = await res.json();
+              
+              if (data.Response === "True" && data.Search) {
+                data.Search
+                  .filter(movie => !watchedIds.includes(movie.imdbID) && !seenIds.has(movie.imdbID))
+                  .forEach(movie => {
+                    seenIds.add(movie.imdbID);
+                    allRecommendations.push(movie);
+                  });
+              }
             }
           } catch (err) {
-            console.error("Error fetching OMDB fallback recommendations:", err);
+            console.error("OMDB fallback error:", err);
           }
         }
       }
       
-      // Final validation to remove any null or invalid entries
-      const validRecommendations = allRecommendations.filter(movie => 
-        movie && movie.imdbID && movie.Title && movie.Poster && movie.Poster !== "N/A"
-      );
+      // Final validation and limiting
+      const validRecommendations = allRecommendations
+        .filter(movie => movie && movie.imdbID && movie.Title && movie.Poster && movie.Poster !== "N/A")
+        .slice(0, 10);
       
-      // Set the recommendations (up to 10)
-      setRecommendedMovies(validRecommendations.slice(0, 10));
+      setRecommendedMovies(validRecommendations);
     } catch (err) {
       console.error("Error fetching recommended movies:", err);
     } finally {

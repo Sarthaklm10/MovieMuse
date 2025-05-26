@@ -23,73 +23,78 @@ export const TMDB_GENRES = {
   "Western": 37
 };
 
-// Helper function with proper headers
-function fetchWithHeaders(url) {
-  return fetch(url, {
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
+// Centralized TMDB API fetch function
+async function fetchTMDB(endpoint, params = {}) {
+  try {
+    // Build query string from params
+    const queryParams = new URLSearchParams({
+      api_key: TMDB_API_KEY,
+      language: 'en-US',
+      ...params
+    });
+    
+    const url = `${TMDB_BASE_URL}${endpoint}?${queryParams.toString()}`;
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`TMDB API error: ${response.status}`);
     }
-  });
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error(`Error fetching ${endpoint}:`, error);
+    return null;
+  }
+}
+
+// Centralized OMDB API fetch function
+async function fetchOMDB(params = {}) {
+  try {
+    const queryParams = new URLSearchParams({
+      apikey: API_KEY,
+      ...params
+    });
+    
+    const url = `${OMDB_BASE_URL}/?${queryParams.toString()}`;
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`OMDB API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching OMDB:', error);
+    return null;
+  }
 }
 
 // Search TMDB by movie title
 export async function searchTMDB(title, year = "") {
-  try {
-    const response = await fetchWithHeaders(
-      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(title)}${year ? `&year=${year}` : ""}`
-    );
-    
-    if (!response.ok) {
-      throw new Error("TMDB search failed");
-    }
-    
-    const data = await response.json();
-    return data.results;
-  } catch (error) {
-    console.error("Error searching TMDB:", error);
-    return [];
-  }
+  const params = { query: title };
+  if (year) params.year = year;
+  
+  const data = await fetchTMDB('/search/movie', params);
+  return data?.results || [];
 }
 
 // Get similar movies from TMDB
 export async function getSimilarMovies(movieId) {
-  try {
-    const res = await fetch(
-      `${TMDB_BASE_URL}/movie/${movieId}/similar?api_key=${TMDB_API_KEY}&language=en-US&page=1`
-    );
-    
-    if (!res.ok) {
-      throw new Error(`TMDB API error: ${res.status}`);
-    }
-    
-    const data = await res.json();
-    
-    return data.results || [];
-  } catch (err) {
-    console.error("Error fetching similar movies from TMDB:", err);
-    return [];
-  }
+  const data = await fetchTMDB(`/movie/${movieId}/similar`, { page: 1 });
+  return data?.results || [];
 }
 
 // Get movie recommendations from TMDB
 export async function getRecommendations(movieId) {
-  try {
-    const res = await fetch(
-      `${TMDB_BASE_URL}/movie/${movieId}/recommendations?api_key=${TMDB_API_KEY}&language=en-US&page=1`
-    );
-    
-    if (!res.ok) {
-      throw new Error(`TMDB API error: ${res.status}`);
-    }
-    
-    const data = await res.json();
-    
-    return data.results || [];
-  } catch (err) {
-    console.error("Error fetching recommendations from TMDB:", err);
-    return [];
-  }
+  const data = await fetchTMDB(`/movie/${movieId}/recommendations`, { page: 1 });
+  return data?.results || [];
 }
 
 // Convert TMDB movie object to our app's format
@@ -109,58 +114,34 @@ export function convertTMDBMovie(tmdbMovie) {
 export async function findTMDBId(imdbId) {
   if (!imdbId) return null;
   
-  try {
-    const res = await fetch(
-      `${TMDB_BASE_URL}/find/${imdbId}?api_key=${TMDB_API_KEY}&external_source=imdb_id`
-    );
-    
-    if (!res.ok) {
-      throw new Error(`TMDB API error: ${res.status}`);
-    }
-    
-    const data = await res.json();
-    const tmdbId = data.movie_results?.[0]?.id || null;
-    
-    return tmdbId;
-  } catch (err) {
-    console.error("Error finding TMDB ID:", err);
-    return null;
-  }
+  const data = await fetchTMDB(`/find/${imdbId}`, { external_source: 'imdb_id' });
+  return data?.movie_results?.[0]?.id || null;
 }
 
 // Discover movies by genre
 export async function discoverMoviesByGenre(genreId) {
-  try {
-    const res = await fetch(
-      `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=${genreId}&sort_by=popularity.desc&page=1`
-    );
-    
-    if (!res.ok) {
-      throw new Error(`TMDB API error: ${res.status}`);
-    }
-    
-    const data = await res.json();
-    
-    return data.results || [];
-  } catch (err) {
-    console.error("Error discovering movies by genre:", err);
-    return [];
-  }
+  const data = await fetchTMDB('/discover/movie', {
+    with_genres: genreId,
+    sort_by: 'popularity.desc',
+    page: 1
+  });
+  
+  return data?.results || [];
 }
 
 // Get genre ID from name
 export async function getGenreId(genreName) {
   if (!genreName) return null;
   
-  // First check if we have a direct match
+  // Check for direct match with known genres
   for (const [key, id] of Object.entries(TMDB_GENRES)) {
     if (key.toLowerCase() === genreName.toLowerCase()) {
       return id;
     }
   }
   
-  // If no direct match, default to Drama
-  return 18; // Drama as fallback
+  // Default to Drama if no match
+  return 18;
 }
 
 // Test API connectivity
@@ -172,20 +153,17 @@ export async function testApiConnectivity() {
   
   // Test OMDB
   try {
-    const omdbResp = await fetch(`${OMDB_BASE_URL}/?apikey=${API_KEY}&s=action&type=movie&page=1`);
+    const data = await fetchOMDB({ s: 'action', type: 'movie', page: 1 });
     
-    if (!omdbResp.ok) {
-      results.omdb = { status: 'error', message: `HTTP error: ${omdbResp.status} ${omdbResp.statusText}` };
+    if (!data) {
+      results.omdb = { status: 'error', message: 'Connection failed' };
+    } else if (data.Response === "True") {
+      results.omdb = { 
+        status: 'success', 
+        message: `Found ${data.totalResults || '?'} results, showing ${data.Search?.length || 0}` 
+      };
     } else {
-      const data = await omdbResp.json();
-      if (data.Response === "True") {
-        results.omdb = { 
-          status: 'success', 
-          message: `Found ${data.totalResults || '?'} results, showing ${data.Search?.length || 0}` 
-        };
-      } else {
-        results.omdb = { status: 'error', message: data.Error || 'Unknown error' };
-      }
+      results.omdb = { status: 'error', message: data.Error || 'Unknown error' };
     }
   } catch (err) {
     results.omdb = { status: 'error', message: err.message || 'Connection failed' };
@@ -193,20 +171,15 @@ export async function testApiConnectivity() {
   
   // Test TMDB
   try {
-    const tmdbResp = await fetch(`${TMDB_BASE_URL}/movie/popular?api_key=${TMDB_API_KEY}&language=en-US&page=1`);
+    const data = await fetchTMDB('/movie/popular', { page: 1 });
     
-    if (!tmdbResp.ok) {
-      results.tmdb = { status: 'error', message: `HTTP error: ${tmdbResp.status} ${tmdbResp.statusText}` };
+    if (!data) {
+      results.tmdb = { status: 'error', message: 'Connection failed' };
     } else {
-      const data = await tmdbResp.json();
-      if (data.results) {
-        results.tmdb = { 
-          status: 'success', 
-          message: `Found ${data.results.length || 0} popular movies` 
-        };
-      } else {
-        results.tmdb = { status: 'error', message: 'Invalid response format' };
-      }
+      results.tmdb = { 
+        status: 'success', 
+        message: `Retrieved ${data.results?.length || 0} popular movies` 
+      };
     }
   } catch (err) {
     results.tmdb = { status: 'error', message: err.message || 'Connection failed' };
