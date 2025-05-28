@@ -772,7 +772,7 @@ body {
 
 .credits-section {
   background-color: var(--color-background);
-  padding: 2rem;
+  padding: 1.5rem;
   border-radius: var(--border-radius-md);
   margin-bottom: 2.4rem;
   box-shadow: var(--shadow-sm);
@@ -804,9 +804,13 @@ body {
   color: var(--color-text-light);
   margin-bottom: 1rem;
   display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 0.6rem;
+  flex-direction: column;
+  gap: 0.5rem;
+  line-height: 1.4;
+}
+
+.credits strong {
+  margin-bottom: 0.2rem;
 }
 
 .credits span {
@@ -850,17 +854,35 @@ body {
   margin-bottom: 2rem;
   display: flex;
   justify-content: center;
+  overflow-x: auto;
+  padding: 0.5rem 0;
+  width: 100%;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.rating-stars::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, and Opera */
+}
+
+/* Ensure the star container is responsive */
+.rating-stars > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+  min-width: fit-content;
 }
 
 .review-input {
   width: 100%;
-  height: 10rem;
-  padding: 1.4rem;
+  height: 8rem;
+  padding: 1rem;
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius-md);
   background-color: var(--color-input-background);
   color: var(--color-input-text);
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-family: var(--font-primary);
   resize: none;
   margin-bottom: 1.6rem;
@@ -1452,10 +1474,14 @@ body {
   gap: 1.6rem;
   margin-top: 1.6rem;
   width: 100%;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .rating-card {
   flex: 1;
+  min-width: 120px;
+  max-width: 180px;
   background-color: var(--color-background);
   border-radius: var(--border-radius-md);
   padding: 1.6rem;
@@ -1463,6 +1489,7 @@ body {
   min-height: 10rem;
   display: flex;
   align-items: center;
+  margin-bottom: 1rem;
 }
 
 .tmdb-card {
@@ -1513,17 +1540,6 @@ body {
   color: var(--color-text-light);
 }
 
-/* Responsive adjustments for mobile */
-@media (max-width: 600px) {
-  .ratings-cards {
-    flex-direction: column;
-  }
-  
-  .rating-card {
-    width: 100%;
-  }
-}
-
 /* Tagline styling */
 .tagline {
   font-style: italic;
@@ -1537,16 +1553,16 @@ body {
 /* Additional information section */
 .additional-info {
   background-color: var(--color-background);
-  padding: 2rem;
+  padding: 1.5rem;
   border-radius: var(--border-radius-md);
   margin-bottom: 2.4rem;
   box-shadow: var(--shadow-sm);
 }
 
 .additional-info h3 {
-  font-size: 2.2rem;
+  font-size: 2rem;
   font-weight: 700;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   font-family: var(--font-display);
   color: var(--color-text);
   letter-spacing: 0.04em;
@@ -1572,9 +1588,8 @@ body {
 
 .info-item {
   display: flex;
-  align-items: center;
-  gap: 1.2rem;
-  padding: 1.2rem;
+  align-items: flex-start;
+  padding: 1rem;
   background-color: var(--color-background-alt);
   border-radius: var(--border-radius-md);
   transition: transform 0.2s ease;
@@ -1585,9 +1600,9 @@ body {
 }
 
 .info-icon {
-  font-size: 2.4rem;
-  width: 4rem;
-  height: 4rem;
+  width: 3.6rem;
+  height: 3.6rem;
+  font-size: 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1640,5 +1655,140 @@ body {
 @media (max-width: 600px) {
   .info-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Improve MovieDetails responsiveness */
+@media (max-width: 768px) {
+  /* Make details header stack vertically on smaller screens */
+  .details header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .poster-container {
+    width: 16rem;
+    margin-bottom: 2rem;
+  }
+  
+  .details-overview {
+    padding-top: 0;
+    width: 100%;
+  }
+
+  .details-meta {
+    justify-content: center;
+  }
+
+  /* Center the back button */
+  .details .btn-back {
+    top: 1rem;
+    right: 1rem;
+  }
+  
+  /* Make ratings cards responsive */
+  .ratings-cards {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .rating-card {
+    width: 100%;
+    max-width: 30rem;
+  }
+  
+  /* Adjust plot and credits for better readability */
+  .plot {
+    padding: 0 1rem;
+  }
+  
+  /* Improve similar movies grid on small screens */
+  .similar-movies-grid {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 1.5rem;
+  }
+  
+  .similar-movie img {
+    height: 150px;
+  }
+  
+  /* Better rating form layout */
+  .rating {
+    padding: 2rem 1.5rem;
+  }
+  
+  .rating-stars {
+    margin-bottom: 1.5rem;
+  }
+  
+  .review-input {
+    height: 8rem;
+  }
+  
+  /* Better user review display */
+  .user-review {
+    padding: 1.5rem;
+  }
+  
+  .user-review p {
+    padding: 0 2rem;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  .details {
+    padding: 1.6rem;
+  }
+  
+  .details-overview h2 {
+    font-size: 2rem;
+  }
+  
+  .poster-container {
+    width: 14rem;
+  }
+  
+  /* Adjust info grid for very small screens */
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  /* Reduce padding for items */
+  .info-item {
+    padding: 1rem;
+  }
+  
+  /* Make credits section more compact */
+  .credits-section {
+    padding: 1.5rem;
+  }
+  
+  /* Smaller rating stars on very small screens */
+  .rating-stars svg {
+    width: 22px !important;
+    height: 22px !important;
+  }
+}
+
+/* Star rating component specific styling */
+.star-rating-component {
+  width: 100%;
+  max-width: 100%;
+}
+
+.star-rating-component > div:first-child {
+  flex-wrap: nowrap !important;
+  gap: 2px !important;
+  width: 100%;
+  justify-content: center;
+}
+
+/* Adjust star size for different screen widths */
+@media (max-width: 480px) {
+  .star-rating-component > div:first-child {
+    gap: 1px !important;
   }
 }

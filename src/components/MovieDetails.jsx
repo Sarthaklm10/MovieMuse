@@ -525,10 +525,11 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
           <div className="rating-stars">
             <StarRating
               maxRating={10}
-              size={24}
+              size={window.innerWidth < 480 ? 20 : 24}
               onSetRating={setUserRating}
               color="var(--color-star)"
               defaultRating={watchedMovie?.userRating}
+              className="star-rating-component"
             />
           </div>
           {(userRating > 0 || watchedMovie) && (

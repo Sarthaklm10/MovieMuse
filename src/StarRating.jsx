@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import PropTypes from "prop-types"
 
 const containerStyle = {
@@ -15,7 +15,8 @@ const starContainerStyle = {
     display: 'flex',
     gap: '4px',
     justifyContent: 'center',
-    flexWrap: 'wrap'
+    flexWrap: 'nowrap',
+    overflow: 'visible'
 }
 
 // Extract star SVG components
@@ -67,6 +68,24 @@ export default function StarRating({
 }) {
     const [rating, setRating] = useState(defaultRating);
     const [tempRating, setTempRating] = useState(0);
+    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+    
+    // Handle window resize
+    useEffect(() => {
+        const handleResize = () => {
+            setWindowWidth(window.innerWidth);
+        };
+        
+        window.addEventListener('resize', handleResize);
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
+    }, []);
+    
+    // Calculate responsive size based on maxRating and window width
+    const responsiveSize = windowWidth < 480 && maxRating > 5 
+        ? Math.max(16, Math.floor(size * (7 / maxRating))) 
+        : size;
 
     function handleRating(rating) {
         setRating(rating)
@@ -77,9 +96,9 @@ export default function StarRating({
         lineHeight: "1.1",
         margin: "0",
         color: tempRating ? "var(--color-star-hover)" : color,
-        fontSize: `${size * 0.8}px`,
+        fontSize: `${responsiveSize * 0.8}px`,
         fontWeight: "600",
-        minWidth: `${size * 1.5}px`,
+        minWidth: `${responsiveSize * 1.5}px`,
         transition: "color 0.3s"
     }
 
@@ -99,7 +118,7 @@ export default function StarRating({
                         tempRating={tempRating}
                         setTempRating={setTempRating}
                         color={color}
-                        size={size}
+                        size={responsiveSize}
                     />
                 ))}
             </div>
