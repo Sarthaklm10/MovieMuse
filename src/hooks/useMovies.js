@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { API_KEY, OMDB_BASE_URL } from "../utils/constants";
+import { searchTMDB, convertTMDBMovie } from "../utils/tmdbApi";
 
 // Simple cache to store results
 const searchCache = new Map();
@@ -22,23 +22,33 @@ export default function useMovies(query) {
             return searchCache.get(searchQuery);
         }
 
-        const res = await fetch(
-            `${OMDB_BASE_URL}/?apikey=${API_KEY}&s=${searchQuery}`,
-            { signal: controller.signal }
-        );
-
-        if (!res.ok) {
-            throw new Error("Something went wrong with fetching movies");
-        }
-
-        const data = await res.json();
-        
-        // Cache the results
-        if (data.Response !== "False") {
+        try {
+            // Search movies using TMDB API
+            const results = await searchTMDB(searchQuery);
+            
+            if (!results || results.length === 0) {
+                return { Response: "False", Error: "No results found" };
+            }
+            
+            // Convert to app's movie format
+            const formattedResults = results
+                .filter(movie => movie.poster_path)
+                .map(convertTMDBMovie)
+                .filter(Boolean); // Remove null entries
+                
+            const data = {
+                Response: formattedResults.length > 0 ? "True" : "False",
+                Search: formattedResults,
+                totalResults: formattedResults.length.toString()
+            };
+            
+            // Cache the results
             searchCache.set(searchQuery, data);
+            return data;
+        } catch (error) {
+            console.error("Error searching movies:", error);
+            return { Response: "False", Error: error.message || "Failed to fetch movies" };
         }
-        
-        return data;
     }, []);
 
     useEffect(() => {
@@ -81,7 +91,7 @@ export default function useMovies(query) {
                     if (query.length >= 3) {
                         setMovies([]);
                     }
-                    throw new Error("Movie not found");
+                    throw new Error(data.Error || "No results found");
                 }
 
                 setMovies(data.Search || []);

@@ -4,7 +4,7 @@ MovieMuse is an interactive React application that allows users to search for mo
 
 ## Features
 
-- **Powerful Movie Search**: Find movies using the OMDB API with instant results
+- **Powerful Movie Search**: Find movies using the TMDB API with instant results
 - **Comprehensive Movie Details**: View detailed information including plot, cast, director, ratings, and more
 - **Personal Rating System**: Rate movies on a scale of 1-10 and add your own reviews
 - **Smart Recommendations**: Get personalized movie recommendations based on your watchlist
@@ -32,8 +32,7 @@ MovieMuse is an interactive React application that allows users to search for mo
 
 - **React**: Front-end UI library using functional components and hooks
 - **Custom Hooks**: Created specialized hooks for local storage, API fetching, and keyboard events
-- **OMDB API**: Primary API for movie data and search functionality
-- **TMDB API**: Secondary API for recommendations and similar movies
+- **TMDB API**: Primary API for movie data, search, recommendations and similar movies
 - **CSS3**: Modern styling with custom properties for theming
 - **LocalStorage API**: For persisting user preferences and watchlist data
 - **Responsive Design**: Flexbox and CSS Grid for layout across all device sizes
@@ -75,7 +74,6 @@ moviemuse/
 
 4. Create a `.env` file in the root directory and add your API keys:
    ```
-   REACT_APP_OMDB_API_KEY=your_omdb_api_key_here
    REACT_APP_TMDB_API_KEY=your_tmdb_api_key_here
    REACT_APP_TMDB_BASE_URL=https://api.themoviedb.org/3
    REACT_APP_TMDB_IMAGE_URL=https://image.tmdb.org/t/p/w500
@@ -108,13 +106,11 @@ This project uses environment variables to store API keys securely. To run the p
 2. Add the following variables to your `.env` file:
 
 ```
-REACT_APP_OMDB_API_KEY=your_omdb_api_key_here
 REACT_APP_TMDB_API_KEY=your_tmdb_api_key_here
 REACT_APP_TMDB_BASE_URL=https://api.themoviedb.org/3
 REACT_APP_TMDB_IMAGE_URL=https://image.tmdb.org/t/p/w500
 ```
 
-3. Replace `your_omdb_api_key_here` with your OMDB API key (get one at https://www.omdbapi.com/apikey.aspx)
-4. Replace `your_tmdb_api_key_here` with your TMDB API key (get one at https://www.themoviedb.org/settings/api)
+3. Replace `your_tmdb_api_key_here` with your TMDB API key (get one at https://www.themoviedb.org/settings/api)
 
-A `.env.example` file is provided as a template.
+A `.env.sample` file is provided as a template.
