@@ -303,4 +303,4 @@ export async function findTMDBId(imdbId) {
   // Otherwise, try to find an equivalent TMDB ID (for backward compatibility)
   const data = await fetchTMDB(`/find/${imdbId}`, { external_source: 'imdb_id' });
   return data?.movie_results?.[0]?.id || null;
-} 
+}

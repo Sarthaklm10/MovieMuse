@@ -9,7 +9,7 @@ const movieCache = {};
 // Cache for similar movies
 const similarMoviesCache = {};
 
-function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched, watched, isWatchedSelected, onSelectMovie }) {
+function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched, watched, isWatchedSelected, onSelectMovie, isAuthenticated, onLoginRequest }) {
   const [movie, setMovie] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [userRating, setUserRating] = useState('');
@@ -58,9 +58,9 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
   // Fetch similar movies using TMDB API
   const fetchSimilarMovies = useCallback(async () => {
     if (!movie.tmdbId) return;  // No ID, no search
-    
+
     setIsLoadingSimilar(true);
-    
+
     try {
       // Check cache first
       if (similarMoviesCache[movie.tmdbId]) {
@@ -68,19 +68,19 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
         setIsLoadingSimilar(false);
         return;
       }
-      
+
       // Get similar movies from TMDB
       const tmdbSimilarMovies = await getSimilarMovies(movie.tmdbId);
       const formattedMovies = tmdbSimilarMovies
         .map(convertTMDBMovie)
         .filter(Boolean) // Remove null entries
         .slice(0, 6);  // Limit to 6 similar movies
-      
+
       // Cache the results
       if (formattedMovies.length > 0) {
         similarMoviesCache[movie.tmdbId] = formattedMovies;
       }
-      
+
       setSimilarMovies(formattedMovies);
     } catch (err) {
       console.error("Error fetching similar movies:", err);
@@ -88,6 +88,9 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
       setIsLoadingSimilar(false);
     }
   }, [movie.tmdbId]);
+
+  // Add a reference to scroll to top
+  const detailsContainerRef = useRef(null);
 
   // Reset states when new movie is selected
   useEffect(() => {
@@ -97,15 +100,15 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
     // Set loading state immediately on selectedId change
     setIsLoading(true);
     setFadeIn(false);
-    
+
     // Only scroll to top when switching movies, not when submitting review
     if (detailsContainerRef.current) {
       // First scroll to top of component
-      detailsContainerRef.current.scrollIntoView({ 
-        behavior: 'auto', 
-        block: 'start' 
+      detailsContainerRef.current.scrollIntoView({
+        behavior: 'auto',
+        block: 'start'
       });
-      
+
       // Then add additional scroll to position it better (scrolls up by 60px)
       setTimeout(() => {
         window.scrollBy({
@@ -114,8 +117,8 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
         });
       }, 50);
     }
-  }, [selectedId]);
-  
+  }, [selectedId, watchedMovie]);
+
   // Separate effect for watchedMovie updates to avoid resetting loading state
   useEffect(() => {
     if (watchedMovie) {
@@ -167,19 +170,19 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
     async function getMovieDetailsData() {
       try {
         // For IDs starting with tmdb-, remove prefix
-        const movieId = selectedId.startsWith('tmdb-') ? 
+        const movieId = selectedId.startsWith('tmdb-') ?
           selectedId.replace('tmdb-', '') : selectedId;
-          
+
         // Get movie details from TMDB API
         const tmdbDetails = await getMovieDetails(movieId);
-        
+
         if (!tmdbDetails) {
           throw new Error("Failed to fetch movie details");
         }
-        
+
         // Format the TMDB data to match our app's expected structure
         const formattedData = formatMovieDetails(tmdbDetails);
-        
+
         // Cache the result
         movieCache[selectedId] = formattedData;
         setMovie(formattedData);
@@ -188,7 +191,7 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
           console.error("Error fetching movie details:", err);
         }
       } finally {
-        if (!controllerRef.current.signal.aborted) {
+        if (!controllerRef.current?.signal.aborted) {
           setTimeout(() => {
             setIsLoading(false);
             setTimeout(() => setFadeIn(true), 10);
@@ -219,7 +222,7 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
   function handleSimilarMovieClick(movieId) {
     // Set fadeIn to false to start the transition
     setFadeIn(false);
-    
+
     // Direct transition to the selected movie
     setTimeout(() => {
       onSelectMovie(movieId, false, true);
@@ -239,13 +242,18 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
     }
   }, [similarMovies]);
 
-  // Add a reference to scroll to top
-  const detailsContainerRef = useRef(null);
-
   const handleAdd = useCallback(() => {
-    // Check if we're updating an existing rating
-    const isUpdating = watched.some(movie => movie.imdbID === selectedId);
-    
+    // Check if user is authenticated before adding
+    if (!isAuthenticated) {
+      // Defensive check to prevent crash if prop is missing
+      if (typeof onLoginRequest === 'function') {
+        onLoginRequest();
+      } else {
+        console.error("onLoginRequest prop is missing or not a function.");
+      }
+      return;
+    }
+
     const newMovie = {
       imdbID: selectedId,
       Title: title,
@@ -255,25 +263,23 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
       runtime: runtime?.split(" ")[0],
       userRating,
       userReview,
-      Genre: genre // Store the genre for better recommendations
+      Genre: genre
     };
     onAddWatched(newMovie);
 
-    // Mark review as submitted to hide the review form
     setIsReviewSubmitted(true);
 
-    // Scroll to position showing the movie header (title and poster)
     if (detailsContainerRef.current) {
-      const headerOffset = 80; // Adjust to show movie title and top of poster
+      const headerOffset = 80;
       const elementPosition = detailsContainerRef.current.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-      
+
       window.scrollTo({
         top: offsetPosition,
         behavior: 'smooth'
       });
     }
-  }, [selectedId, title, year, poster, imdbRating, runtime, userRating, userReview, onAddWatched, genre, watched]);
+  }, [selectedId, title, year, poster, imdbRating, runtime, userRating, userReview, onAddWatched, genre, isAuthenticated, onLoginRequest]);
 
   // Add height reservation for similar movies section to prevent layout shifts
   const similarMoviesSectionStyle = {
@@ -293,13 +299,13 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
           <div className="skeleton-rating"></div>
         </div>
       </header>
-      
+
       <div className="skeleton-plot">
         <div className="skeleton-text"></div>
         <div className="skeleton-text"></div>
         <div className="skeleton-text"></div>
       </div>
-      
+
       <div className="skeleton-section">
         <div className="skeleton-heading"></div>
         <div className="skeleton-text"></div>
@@ -311,14 +317,13 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
   // Force minimum loading duration for consistency
   useEffect(() => {
     if (isLoading) {
-      // Ensure skeleton always shows for at least 800ms
       const minLoadingTimer = setTimeout(() => {
         if (movie && Object.keys(movie).length > 0) {
           setIsLoading(false);
           setTimeout(() => setFadeIn(true), 10);
         }
       }, 800);
-      
+
       return () => clearTimeout(minLoadingTimer);
     }
   }, [isLoading, movie]);
@@ -439,7 +444,6 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
         )}
       </div>
 
-      {/* Additional Information Section */}
       {(homepage || (budget > 0) || (revenue > 0) || (status && status !== "Released")) && (
         <div className="additional-info">
           <h3>Additional Information</h3>
@@ -489,10 +493,9 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
         </div>
       )}
 
-      {/* Similar Movies Section */}
       <div className="similar-movies-section" style={similarMoviesSectionStyle}>
         <h3>Similar Movies</h3>
-        
+
         {isLoadingSimilar ? (
           <div className="similar-movies-loading">
             <span className="spinner-small"></span>
@@ -501,8 +504,8 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
         ) : similarMovies.length > 0 ? (
           <div className="similar-movies-grid">
             {similarMovies.map(movie => (
-              <div 
-                key={movie.imdbID} 
+              <div
+                key={movie.imdbID}
                 className="similar-movie"
                 onClick={() => handleSimilarMovieClick(movie.imdbID)}
               >
@@ -532,7 +535,7 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
               className="star-rating-component"
             />
           </div>
-          {(userRating > 0 || watchedMovie) && (
+          {(userRating > 0 || (isAuthenticated && watchedMovie)) && (
             <>
               <textarea
                 className="review-input"
@@ -546,12 +549,12 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
             </>
           )}
         </div>
-        {watchedMovie?.userReview && (
+        {isAuthenticated && watchedMovie?.userReview && (
           <div className="user-review">
             <h3>Your Review</h3>
             <p>{watchedMovie.userReview}</p>
-            <button 
-              className="btn-edit-review" 
+            <button
+              className="btn-edit-review"
               onClick={() => setIsReviewSubmitted(false)}
             >
               Edit Review
