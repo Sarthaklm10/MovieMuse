@@ -1,7 +1,13 @@
+require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
-require("dotenv").config();
+
+if (!process.env.JWT_SECRET) {
+  console.error("FATAL ERROR: JWT_SECRET is not defined in your .env file.");
+  process.exit(1);
+}
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -11,7 +17,7 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDB Connection
-const db = "mongodb://localhost:27017/moviemuse";
+const db = process.env.MONGO_URI || "mongodb://localhost:27017/moviemuse";
 mongoose
   .connect(db)
   .then(() => console.log("MongoDB Connected..."))

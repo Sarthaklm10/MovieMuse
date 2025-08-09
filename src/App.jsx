@@ -106,14 +106,14 @@ export default function App() {
   const { movies, isLoading, error } = useMovies(query);
   const [theme, setTheme] = useLocalStorage('dark', 'theme');
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     localStorage.removeItem('token');
     setIsAuthenticated(false);
     setWatched([]);
     setUsername('');
-  };
+  }, []);
 
-  const handleLogin = () => {
+  const handleLogin = useCallback(() => {
     const token = localStorage.getItem('token');
     if (token) {
       const userData = parseJwt(token);
@@ -127,20 +127,24 @@ export default function App() {
       setSelectedId(authRedirectMovieId);
       setAuthRedirectMovieId(null);
     }
-  };
+  }, [authRedirectMovieId]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) {
+    const expiry = localStorage.getItem('token_expiry');
+    if (token && expiry && Date.now() < parseInt(expiry, 10)) {
       const userData = parseJwt(token);
-      if (userData && userData.user && userData.user.username) {
+      if (userData?.user?.username) {
         setUsername(userData.user.username);
-        setIsAuthenticated(true);
       } else {
-        handleLogout();
+        const storedName = localStorage.getItem('username');
+        if (storedName) setUsername(storedName);
       }
+      setIsAuthenticated(true);
+    } else {
+      handleLogout();
     }
-  }, []);
+  }, [handleLogout]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -158,7 +162,7 @@ export default function App() {
       };
       fetchWatched();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, handleLogout]);
 
   useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
   useEffect(() => { updateUrl({ query, movieId: selectedId, isWatched: isWatchedSelected }); }, [query, selectedId, isWatchedSelected]);
@@ -313,7 +317,6 @@ export default function App() {
         <WatchedList watched={watched} onSelectMovie={handleSelectMovie} onRemoveWatched={handleRemoveWatched} />
       </>
     );
-
   }, [selectedId, isWatchedSelected, watched, handleCloseMovie, handleAddWatched, handleRemoveWatched, handleSelectMovie, isAuthenticated, handleLoginRequest]);
 
   if (showAuthPage) {

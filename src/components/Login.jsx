@@ -9,10 +9,23 @@ function Login({ onLoginSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const { token } = await login({ username, password });
+      // login() should return an object containing `token` and optionally `user`
+      const res = await login({ username, password });
+      const token = res?.token ?? res; // handle utils that return token directly
+      if (!token) throw new Error('No token returned from login');
+
+      // store token and expiry (8 hours)
+      const expiryTime = Date.now() + 8 * 60 * 60 * 1000; // 8 hours in ms
       localStorage.setItem('token', token);
-      onLoginSuccess();
+      localStorage.setItem('token_expiry', String(expiryTime));
+
+      // optionally store username if server returned it (fallback for display)
+      if (res?.user?.username) localStorage.setItem('username', res.user.username);
+
+      // continue existing flow
+      if (typeof onLoginSuccess === 'function') onLoginSuccess();
     } catch (err) {
+      console.error('Login failed:', err);
       setError('Invalid credentials');
     }
   };
