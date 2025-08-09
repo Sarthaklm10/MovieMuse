@@ -1,7 +1,12 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import StarRating from '../StarRating';
-import Loader from './Loader';
-import { getMovieDetails, getSimilarMovies, convertTMDBMovie, formatMovieDetails } from '../utils/tmdbApi';
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import StarRating from "../StarRating";
+import Loader from "./Loader";
+import {
+  getMovieDetails,
+  getSimilarMovies,
+  convertTMDBMovie,
+  formatMovieDetails,
+} from "../utils/tmdbApi";
 
 // Simple cache to store previously fetched movie details
 const movieCache = {};
@@ -9,11 +14,21 @@ const movieCache = {};
 // Cache for similar movies
 const similarMoviesCache = {};
 
-function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched, watched, isWatchedSelected, onSelectMovie, isAuthenticated, onLoginRequest }) {
+function MovieDetails({
+  selectedId,
+  onCloseMovie,
+  onAddWatched,
+  onRemoveWatched,
+  watched,
+  isWatchedSelected,
+  onSelectMovie,
+  isAuthenticated,
+  onLoginRequest,
+}) {
   const [movie, setMovie] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const [userRating, setUserRating] = useState('');
-  const [userReview, setUserReview] = useState('');
+  const [userRating, setUserRating] = useState("");
+  const [userReview, setUserReview] = useState("");
   const [fadeIn, setFadeIn] = useState(false);
   const [isReviewSubmitted, setIsReviewSubmitted] = useState(false);
   const [similarMovies, setSimilarMovies] = useState([]);
@@ -21,7 +36,7 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
   const controllerRef = useRef(null);
 
   // Find watched movie data if it exists
-  const watchedMovie = watched.find(movie => movie.imdbID === selectedId);
+  const watchedMovie = watched.find((movie) => movie.imdbID === selectedId);
 
   const {
     Title: title,
@@ -49,15 +64,16 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
     revenue,
     production_companies,
     homepage,
-    status
+    status,
   } = movie;
 
   // Extract TMDB rating from the Ratings array if available
-  const tmdbRating = Ratings?.find(rating => rating.Source === 'TMDB Rating')?.Value || 'N/A';
+  const tmdbRating =
+    Ratings?.find((rating) => rating.Source === "TMDB Rating")?.Value || "N/A";
 
   // Fetch similar movies using TMDB API
   const fetchSimilarMovies = useCallback(async () => {
-    if (!movie.tmdbId) return;  // No ID, no search
+    if (!movie.tmdbId) return; // No ID, no search
 
     setIsLoadingSimilar(true);
 
@@ -74,7 +90,7 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
       const formattedMovies = tmdbSimilarMovies
         .map(convertTMDBMovie)
         .filter(Boolean) // Remove null entries
-        .slice(0, 6);  // Limit to 6 similar movies
+        .slice(0, 6); // Limit to 6 similar movies
 
       // Cache the results
       if (formattedMovies.length > 0) {
@@ -94,8 +110,8 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
 
   // Reset states when new movie is selected
   useEffect(() => {
-    setUserRating(watchedMovie?.userRating || '');
-    setUserReview(watchedMovie?.userReview || '');
+    setUserRating(watchedMovie?.userRating || "");
+    setUserReview(watchedMovie?.userReview || "");
     setIsReviewSubmitted(!!watchedMovie);
     // Set loading state immediately on selectedId change
     setIsLoading(true);
@@ -105,15 +121,15 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
     if (detailsContainerRef.current) {
       // First scroll to top of component
       detailsContainerRef.current.scrollIntoView({
-        behavior: 'auto',
-        block: 'start'
+        behavior: "auto",
+        block: "start",
       });
 
       // Then add additional scroll to position it better (scrolls up by 60px)
       setTimeout(() => {
         window.scrollBy({
           top: -60,
-          behavior: 'smooth'
+          behavior: "smooth",
         });
       }, 50);
     }
@@ -122,8 +138,8 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
   // Separate effect for watchedMovie updates to avoid resetting loading state
   useEffect(() => {
     if (watchedMovie) {
-      setUserRating(watchedMovie.userRating || '');
-      setUserReview(watchedMovie.userReview || '');
+      setUserRating(watchedMovie.userRating || "");
+      setUserReview(watchedMovie.userReview || "");
       setIsReviewSubmitted(true);
     }
   }, [watchedMovie]);
@@ -170,8 +186,9 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
     async function getMovieDetailsData() {
       try {
         // For IDs starting with tmdb-, remove prefix
-        const movieId = selectedId.startsWith('tmdb-') ?
-          selectedId.replace('tmdb-', '') : selectedId;
+        const movieId = selectedId.startsWith("tmdb-")
+          ? selectedId.replace("tmdb-", "")
+          : selectedId;
 
         // Get movie details from TMDB API
         const tmdbDetails = await getMovieDetails(movieId);
@@ -233,7 +250,7 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
   useEffect(() => {
     if (similarMovies.length > 0) {
       // Preload all movie posters
-      similarMovies.forEach(movie => {
+      similarMovies.forEach((movie) => {
         if (movie.Poster && movie.Poster !== "N/A") {
           const img = new Image();
           img.src = movie.Poster;
@@ -246,7 +263,7 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
     // Check if user is authenticated before adding
     if (!isAuthenticated) {
       // Defensive check to prevent crash if prop is missing
-      if (typeof onLoginRequest === 'function') {
+      if (typeof onLoginRequest === "function") {
         onLoginRequest();
       } else {
         console.error("onLoginRequest prop is missing or not a function.");
@@ -263,7 +280,7 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
       runtime: runtime?.split(" ")[0],
       userRating,
       userReview,
-      Genre: genre
+      Genre: genre,
     };
     onAddWatched(newMovie);
 
@@ -271,19 +288,34 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
 
     if (detailsContainerRef.current) {
       const headerOffset = 80;
-      const elementPosition = detailsContainerRef.current.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+      const elementPosition =
+        detailsContainerRef.current.getBoundingClientRect().top;
+      const offsetPosition =
+        elementPosition + window.pageYOffset - headerOffset;
 
       window.scrollTo({
         top: offsetPosition,
-        behavior: 'smooth'
+        behavior: "smooth",
       });
     }
-  }, [selectedId, title, year, poster, imdbRating, runtime, userRating, userReview, onAddWatched, genre, isAuthenticated, onLoginRequest]);
+  }, [
+    selectedId,
+    title,
+    year,
+    poster,
+    imdbRating,
+    runtime,
+    userRating,
+    userReview,
+    onAddWatched,
+    genre,
+    isAuthenticated,
+    onLoginRequest,
+  ]);
 
   // Add height reservation for similar movies section to prevent layout shifts
   const similarMoviesSectionStyle = {
-    minHeight: isLoadingSimilar ? '250px' : 'auto'
+    minHeight: isLoadingSimilar ? "250px" : "auto",
   };
 
   // Skeleton component to maintain consistency
@@ -328,11 +360,33 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
     }
   }, [isLoading, movie]);
 
-  // For loading state
+  // Review section states
+  const [showSuccessPrompt, setShowSuccessPrompt] = useState(false);
+  const [isEditingReview, setIsEditingReview] = useState(false);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    handleAdd();
+
+    const wasAlreadyWatched = Boolean(watchedMovie);
+    const msg = wasAlreadyWatched ? "Review updated!" : "Review added!";
+
+    // Show success message and switch back to view mode
+    setShowSuccessPrompt(msg);
+    setIsReviewSubmitted(true);
+    setIsEditingReview(false);
+
+    // hide prompt after 2s
+    setTimeout(() => setShowSuccessPrompt(false), 2000);
+  };
+
   if (isLoading) return <SkeletonLoader />;
 
   return (
-    <div className={`details ${fadeIn ? 'fade-in' : ''}`} ref={detailsContainerRef}>
+    <div
+      className={`details ${fadeIn ? "fade-in" : ""}`}
+      ref={detailsContainerRef}
+    >
       <header>
         <button className="btn-back" onClick={onCloseMovie}>
           <svg
@@ -353,6 +407,7 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
         <div className="poster-container">
           <img src={poster} alt={`Poster of ${title}`} />
         </div>
+
         <div className="details-overview">
           <h2>{title}</h2>
           <p>
@@ -370,8 +425,12 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
 
           <div className="details-meta">
             {language && <span className="meta-item">📢 {language}</span>}
-            {country && country !== 'N/A' && <span className="meta-item">🌍 {country}</span>}
-            {awards && awards !== "N/A" && <span className="meta-item">🏆 {awards}</span>}
+            {country && country !== "N/A" && (
+              <span className="meta-item">🌍 {country}</span>
+            )}
+            {awards && awards !== "N/A" && (
+              <span className="meta-item">🏆 {awards}</span>
+            )}
           </div>
 
           <div className="ratings-cards">
@@ -388,7 +447,7 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
               </div>
             </div>
 
-            {audienceScore && audienceScore !== 'N/A' && (
+            {audienceScore && audienceScore !== "N/A" && (
               <div className="rating-card audience-card">
                 <div className="rating-content">
                   <div className="rating-icon">🍅</div>
@@ -405,7 +464,9 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
                 <div className="rating-content">
                   <div className="rating-icon">🌟</div>
                   <div className="rating-info">
-                    <div className="rating-value">{watchedMovie.userRating}</div>
+                    <div className="rating-value">
+                      {watchedMovie.userRating}
+                    </div>
                     <div className="rating-label">Your rating</div>
                   </div>
                 </div>
@@ -439,22 +500,27 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
         )}
         {production_companies && production_companies.length > 0 && (
           <p className="credits">
-            <strong>Production:</strong> <span>{production_companies.join(", ")}</span>
+            <strong>Production:</strong>{" "}
+            <span>{production_companies.join(", ")}</span>
           </p>
         )}
       </div>
 
-      {(homepage || (budget > 0) || (revenue > 0) || (status && status !== "Released")) && (
+      {(homepage ||
+        budget > 0 ||
+        revenue > 0 ||
+        (status && status !== "Released")) && (
         <div className="additional-info">
           <h3>Additional Information</h3>
-
           <div className="info-grid">
             {budget > 0 && (
               <div className="info-item">
                 <div className="info-icon">💰</div>
                 <div className="info-content">
                   <div className="info-label">Budget</div>
-                  <div className="info-value">${new Intl.NumberFormat('en-US').format(budget)}</div>
+                  <div className="info-value">
+                    ${new Intl.NumberFormat("en-US").format(budget)}
+                  </div>
                 </div>
               </div>
             )}
@@ -463,7 +529,9 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
                 <div className="info-icon">💵</div>
                 <div className="info-content">
                   <div className="info-label">Box Office</div>
-                  <div className="info-value">${new Intl.NumberFormat('en-US').format(revenue)}</div>
+                  <div className="info-value">
+                    ${new Intl.NumberFormat("en-US").format(revenue)}
+                  </div>
                 </div>
               </div>
             )}
@@ -482,7 +550,12 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
                 <div className="info-content">
                   <div className="info-label">Official Website</div>
                   <div className="info-value">
-                    <a href={homepage} target="_blank" rel="noopener noreferrer" className="movie-link">
+                    <a
+                      href={homepage}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="movie-link"
+                    >
                       Visit Website
                     </a>
                   </div>
@@ -495,7 +568,6 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
 
       <div className="similar-movies-section" style={similarMoviesSectionStyle}>
         <h3>Similar Movies</h3>
-
         {isLoadingSimilar ? (
           <div className="similar-movies-loading">
             <span className="spinner-small"></span>
@@ -503,19 +575,19 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
           </div>
         ) : similarMovies.length > 0 ? (
           <div className="similar-movies-grid">
-            {similarMovies.map(movie => (
+            {similarMovies.map((m) => (
               <div
-                key={movie.imdbID}
+                key={m.imdbID}
                 className="similar-movie"
-                onClick={() => handleSimilarMovieClick(movie.imdbID)}
+                onClick={() => handleSimilarMovieClick(m.imdbID)}
               >
-                {movie.Poster && movie.Poster !== "N/A" ? (
-                  <img src={movie.Poster} alt={`Poster of ${movie.Title}`} />
+                {m.Poster && m.Poster !== "N/A" ? (
+                  <img src={m.Poster} alt={`Poster of ${m.Title}`} />
                 ) : (
                   <div className="no-poster">No poster available</div>
                 )}
-                <h4>{movie.Title}</h4>
-                <p>{movie.Year}</p>
+                <h4>{m.Title}</h4>
+                <p>{m.Year}</p>
               </div>
             ))}
           </div>
@@ -523,43 +595,70 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, onRemoveWatched,
       </div>
 
       <section>
-        <div className="rating">
-          <h3>{watchedMovie ? "Edit your rating" : "Rate this movie"}</h3>
-          <div className="rating-stars">
-            <StarRating
-              maxRating={10}
-              size={window.innerWidth < 480 ? 20 : 24}
-              onSetRating={setUserRating}
-              color="var(--color-star)"
-              defaultRating={watchedMovie?.userRating}
-              className="star-rating-component"
-            />
-          </div>
-          {(userRating > 0 || (isAuthenticated && watchedMovie)) && (
-            <>
-              <textarea
-                className="review-input"
-                placeholder="Write your review (optional)..."
-                value={userReview}
-                onChange={(e) => setUserReview(e.target.value)}
-              />
-              <button className="btn-add" onClick={handleAdd}>
-                {watchedMovie ? "Update rating" : "+ Add to list"}
-              </button>
-            </>
-          )}
-        </div>
-        {isAuthenticated && watchedMovie?.userReview && (
+        {/* If movie already logged and not editing - show review only (with rating display) */}
+        {isAuthenticated && watchedMovie?.userReview && !isEditingReview && (
           <div className="user-review">
             <h3>Your Review</h3>
+            <div className="rating-display">
+              {/* Simple inline display of user rating */}
+              <div className="rating-value-inline">
+                🌟 {watchedMovie.userRating}/10
+              </div>
+            </div>
             <p>{watchedMovie.userReview}</p>
             <button
               className="btn-edit-review"
-              onClick={() => setIsReviewSubmitted(false)}
+              onClick={() => {
+                setIsEditingReview(true);
+                setUserRating(watchedMovie.userRating || "");
+                setUserReview(watchedMovie.userReview || "");
+              }}
             >
               Edit Review
             </button>
           </div>
+        )}
+
+        {/* Rating form for new movie or editing */}
+        {(!watchedMovie || isEditingReview) && (
+          <form onSubmit={handleSubmit} className="rating">
+            <h3>{watchedMovie ? "Edit your rating" : "Rate this movie"}</h3>
+
+            <div className="rating-stars">
+              <StarRating
+                maxRating={10}
+                size={window.innerWidth < 480 ? 20 : 24}
+                onSetRating={setUserRating}
+                color="var(--color-star)"
+                defaultRating={watchedMovie?.userRating}
+                className="star-rating-component"
+              />
+            </div>
+
+            {(userRating > 0 || (!watchedMovie && isAuthenticated)) && (
+              <>
+                <textarea
+                  className="review-input"
+                  placeholder="Write your review (optional)..."
+                  value={userReview}
+                  onChange={(e) => setUserReview(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSubmit(e);
+                    }
+                  }}
+                />
+                <button type="submit" className="btn-add">
+                  {watchedMovie ? "Update rating" : "+ Add to list"}
+                </button>
+              </>
+            )}
+          </form>
+        )}
+
+        {showSuccessPrompt && (
+          <div className="success-prompt">{showSuccessPrompt}</div>
         )}
       </section>
     </div>

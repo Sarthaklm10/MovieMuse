@@ -113,12 +113,33 @@ export default function App() {
     setUsername('');
   }, []);
 
-  const handleLogin = useCallback(() => {
+  // const handleLogin = useCallback(() => {
+  //   const token = localStorage.getItem('token');
+  //   if (token) {
+  //     const userData = parseJwt(token);
+  //     if (userData && userData.user && userData.user.username) {
+  //       setUsername(userData.user.username);
+  //     }
+  //     setIsAuthenticated(true);
+  //   }
+  //   setShowAuthPage(false);
+  //   if (authRedirectMovieId) {
+  //     setSelectedId(authRedirectMovieId);
+  //     setAuthRedirectMovieId(null);
+  //   }
+  // }, [authRedirectMovieId]);
+
+  const handleLogin = useCallback((nameFromLogin) => {
     const token = localStorage.getItem('token');
     if (token) {
       const userData = parseJwt(token);
-      if (userData && userData.user && userData.user.username) {
+      if (nameFromLogin) {
+        setUsername(nameFromLogin);
+      } else if (userData?.user?.username) {
         setUsername(userData.user.username);
+      } else {
+        const storedName = localStorage.getItem('username');
+        if (storedName) setUsername(storedName);
       }
       setIsAuthenticated(true);
     }

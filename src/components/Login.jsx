@@ -19,12 +19,13 @@ function Login({ onLoginSuccess }) {
       localStorage.setItem('token', token);
       localStorage.setItem('token_expiry', String(expiryTime));
 
-      // optionally store username if server returned it (fallback for display)
-      if (res?.user?.username) localStorage.setItem('username', res.user.username);
+      localStorage.setItem('username', username);
 
-      // continue existing flow
-      if (typeof onLoginSuccess === 'function') onLoginSuccess();
-    } catch (err) {
+      // Save username
+      if (typeof onLoginSuccess === 'function')
+        onLoginSuccess(username);
+    }
+    catch (err) {
       console.error('Login failed:', err);
       setError('Invalid credentials');
     }
