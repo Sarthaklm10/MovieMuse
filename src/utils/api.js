@@ -1,5 +1,10 @@
-const API_URL = "http://localhost:5000/api";
+// Detect environment and set API base URL
+const API_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://moviemuse-s0gi.onrender.com/api" // Render backend
+    : "http://localhost:5000/api"; // Local backend
 
+// Generic request helper
 async function request(endpoint, options = {}) {
   const res = await fetch(`${API_URL}${endpoint}`, {
     headers: {
@@ -9,11 +14,13 @@ async function request(endpoint, options = {}) {
     },
     ...options,
   });
+
   const data = await res.json();
   if (!res.ok) throw new Error(data.msg || "An error occurred");
   return data;
 }
 
+// API functions
 export const login = (credentials) =>
   request("/auth/login", {
     method: "POST",
