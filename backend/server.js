@@ -3,6 +3,9 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const authRoutes = require("./routes/auth");
+const watchlistRoutes = require("./routes/watchlist");
+const moviesRoutes = require("./routes/movies");
 
 if (!process.env.JWT_SECRET) {
   console.error("FATAL ERROR: JWT_SECRET is not defined in your .env file.");
@@ -12,10 +15,10 @@ if (!process.env.JWT_SECRET) {
 const app = express();
 const port = process.env.PORT || 5000;
 
-// Allowed origins (Netlify + local)
+// CORS Allowed originsw
 const allowedOrigins = [
   "http://localhost:3000", // React dev server
-  "https://moviemuse-sar.netlify.app", // Your Netlify frontend
+  "https://moviemuse-sar.netlify.app", // Netlify frontend
 ];
 
 // CORS configuration
@@ -43,8 +46,9 @@ mongoose
   .catch((err) => console.error(err));
 
 // API Routes
-app.use("/api/auth", require("./routes/auth"));
-app.use("/api/watchlist", require("./routes/watchlist"));
+app.use("/api/auth", authRoutes);
+app.use("/api/watchlist", watchlistRoutes);
+app.use("/api/movies", moviesRoutes);
 
 // Start server
 app.listen(port, () => {

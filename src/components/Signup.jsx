@@ -12,7 +12,9 @@ function Signup({ onSignupSuccess }) {
     setError('');
     setSuccess('');
     if (password.length < 6) {
-      return setError('Password must be at least 6 characters');
+      setError('Password must be at least 6 characters');
+      setTimeout(() => setError(''), 3000);
+      return;
     }
     try {
       await signup({ username, password });
@@ -20,14 +22,15 @@ function Signup({ onSignupSuccess }) {
       setTimeout(onSignupSuccess, 1500); // Switch to login form after success
     } catch (err) {
       setError('Username already taken');
+      setTimeout(() => setError(''), 3000);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="auth-form">
       <h2>Sign Up</h2>
-      {error && <p className="error">{error}</p>}
-      {success && <p className="success">{success}</p>}
+      {error && <p className={`error ${error ? 'visible' : ''}`}>{error}</p>}
+      {success && <p className={`success ${success ? 'visible' : ''}`}>{success}</p>}
       <input
         type="text"
         placeholder="Username"

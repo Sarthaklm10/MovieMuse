@@ -1,116 +1,138 @@
 # MovieMuse 🎬
 
-MovieMuse is an interactive React application that allows users to search for movies, view detailed information, rate them, add personal reviews, and create a personalized watchlist. The application features a modern, responsive design with both light and dark themes.
+MovieMuse is a full-stack application that allows users to search for movies, view detailed information, rate them, and create a personalized watchlist. The application features a modern, responsive design with user authentication and a persistent database to store user data.
 
 ## Features
 
-- **Powerful Movie Search**: Find movies using the TMDB API with instant results
-- **Comprehensive Movie Details**: View detailed information including plot, cast, director, ratings, and more
-- **Personal Rating System**: Rate movies on a scale of 1-10 and add your own reviews
-- **Smart Recommendations**: Get personalized movie recommendations based on your watchlist
-- **Bookmarking System**: Keep track of movies you've watched with your ratings and reviews
-- **Similar Movies**: Discover related movies based on your current selection
-- **Dark/Light Theme**: Toggle between light and dark themes based on your preference
-- **Responsive Design**: Enjoy a seamless experience across desktop, tablet, and mobile devices
-- **Local Storage**: Your watchlist and preferences are saved between sessions
+- **User Authentication**: Secure user registration and login system using JWT and bcrypt.
+- **Personalized Watchlist**: Each user has their own watchlist stored in a MongoDB database.
+- **Powerful Movie Search**: Find movies using the TMDB API with instant results.
+- **Comprehensive Movie Details**: View detailed information including plot, cast, director, ratings, and more.
+- **Personal Rating System**: Rate movies on a scale of 1-10 and add your own reviews.
+- **Smart Recommendations**: Get personalized movie recommendations based on your watchlist.
+- **Bookmarking System**: Keep track of movies you've watched with your ratings and reviews.
+- **Similar Movies**: Discover related movies based on your current selection.
+- **Dark/Light Theme**: Toggle between light and dark themes based on your preference.
+- **Responsive Design**: Enjoy a seamless experience across desktop, tablet, and mobile devices.
 
 ## Screenshots
 
 ### Main Interface with Movie Search
+
 ![Main Interface](./screenshots/screenshot1.png)
-*The main interface showing search functionality and movie results with a clean, modern design*
+_The main interface showing search functionality and movie results with a clean, modern design_
 
 ### Movie Details View
+
 ![Movie Details](./screenshots/screenshot2.png)
-*Detailed movie view displaying comprehensive information, ratings, and similar movie recommendations*
+_Detailed movie view displaying comprehensive information, ratings, and similar movie recommendations_
 
 ### Watchlist with User Ratings
+
 ![Watchlist](./screenshots/screenshot3.png)
-*Personal watchlist showing rated and reviewed movies with summary statistics*
+_Personal watchlist showing rated and reviewed movies with summary statistics_
 
 ## Technologies Used
 
-- **React**: Front-end UI library using functional components and hooks
-- **Custom Hooks**: Created specialized hooks for local storage, API fetching, and keyboard events
-- **TMDB API**: Primary API for movie data, search, recommendations and similar movies
-- **CSS3**: Modern styling with custom properties for theming
-- **LocalStorage API**: For persisting user preferences and watchlist data
-- **Responsive Design**: Flexbox and CSS Grid for layout across all device sizes
-- **ES6+ JavaScript**: Modern JavaScript features and syntax
+### Frontend
+
+- **React**: Front-end UI library using functional components and hooks.
+- **Custom Hooks**: Created specialized hooks for local storage, API fetching, and keyboard events.
+- **TMDB API**: Primary API for movie data, search, recommendations and similar movies.
+- **CSS3**: Modern styling with custom properties for theming.
+- **Responsive Design**: Flexbox and CSS Grid for layout across all device sizes.
+- **ES6+ JavaScript**: Modern JavaScript features and syntax.
+
+### Backend
+
+- **Node.js**: JavaScript runtime for the server.
+- **Express**: Web framework for Node.js.
+- **MongoDB**: NoSQL database for storing user data.
+- **Mongoose**: Object Data Modeling (ODM) library for MongoDB.
+- **JWT (JSON Web Tokens)**: For secure user authentication.
+- **bcryptjs**: For hashing user passwords.
 
 ## Project Structure
 
 ```
 moviemuse/
+├── backend/
+│   ├── middleware/
+│   ├── models/
+│   ├── routes/
+│   ├── server.js
+│   └── package.json
 ├── public/
 │   ├── index.html
 │   └── favicon.ico
 ├── src/
-│   ├── components/     # UI components
-│   ├── hooks/          # Custom React hooks
-│   ├── utils/          # Helper functions and constants
-│   ├── App.jsx         # Main application component
-│   ├── index.js        # Application entry point
-│   └── index.css       # Global styles
-└── screenshots/        # Project screenshots
+│   ├── components/
+│   ├── hooks/
+│   ├── utils/
+│   ├── App.jsx
+│   ├── index.js
+│   └── index.css
+└── screenshots/
 ```
 
 ## Setup and Installation
 
-1. Clone the repository:
-   ```
-   git clone https://github.com/yourusername/moviemuse.git
-   ```
+### Prerequisites
 
-2. Navigate to the project directory:
-   ```
-   cd moviemuse 
-   ```
+- Node.js and npm
+- MongoDB
 
-3. Install dependencies:
+### Backend Setup
+
+1. Navigate to the `backend` directory:
+   ```
+   cd backend
+   ```
+2. Install dependencies:
    ```
    npm install
    ```
+3. Create a `.env` file in the `backend` directory and add the following variables:
+   ```
+   MONGO_URI=your_mongodb_connection_string
+   JWT_SECRET=your_jwt_secret
+   ```
+4. Start the backend server:
+   ```
+   npm start
+   ```
 
-4. Create a `.env` file in the root directory and add your API keys:
+### Frontend Setup
+
+1. Navigate to the root project directory:
+   ```
+   cd ..
+   ```
+2. Install dependencies:
+   ```
+   npm install
+   ```
+3. Create a `.env` file in the root directory and add your API keys:
    ```
    REACT_APP_TMDB_API_KEY=your_tmdb_api_key_here
    REACT_APP_TMDB_BASE_URL=https://api.themoviedb.org/3
    REACT_APP_TMDB_IMAGE_URL=https://image.tmdb.org/t/p/w500
    ```
-
-5. Start the development server:
+4. Start the frontend development server:
    ```
    npm start
    ```
+5. Open your browser and navigate to `http://localhost:3000`
 
-6. Open your browser and navigate to `http://localhost:3000`
+## API Endpoints
 
-## How to Use
+### Auth
 
-1. **Search for Movies**: Type a movie title in the search bar
-2. **View Movie Details**: Click on any movie poster to see detailed information
-3. **Rate and Review**: Select a star rating (1-10) and optionally add a text review
-4. **Add to Watchlist**: After rating, click "Add to list" to save to your watchlist
-5. **View Similar Movies**: Scroll down in movie details to see similar movie recommendations
-6. **Check Your Watchlist**: Your watched movies appear in the right panel with ratings
-7. **Toggle Theme**: Click the sun/moon icon in the navigation bar to switch between light and dark themes
+- `POST /api/auth/signup`: Register a new user.
+- `POST /api/auth/login`: Authenticate user and get token.
 
-## Setup
+### Watchlist
 
-### Environment Variables
-
-This project uses environment variables to store API keys securely. To run the project locally:
-
-1. Create a `.env` file in the root directory
-2. Add the following variables to your `.env` file:
-
-```
-REACT_APP_TMDB_API_KEY=your_tmdb_api_key_here
-REACT_APP_TMDB_BASE_URL=https://api.themoviedb.org/3
-REACT_APP_TMDB_IMAGE_URL=https://image.tmdb.org/t/p/w500
-```
-
-3. Replace `your_tmdb_api_key_here` with your TMDB API key (get one at https://www.themoviedb.org/settings/api)
-
-A `.env.sample` file is provided as a template.
+- `GET /api/watchlist`: Get the logged-in user's watchlist.
+- `POST /api/watchlist/add`: Add or update a movie in the watchlist.
+- `DELETE /api/watchlist/remove/:imdbID`: Remove a movie from the watchlist.

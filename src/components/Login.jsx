@@ -28,13 +28,14 @@ function Login({ onLoginSuccess }) {
     catch (err) {
       console.error('Login failed:', err);
       setError('Invalid credentials');
+      setTimeout(() => setError(''), 3000);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="auth-form">
       <h2>Login</h2>
-      {error && <p className="error">{error}</p>}
+      {error && <p className={`error ${error ? 'visible' : ''}`}>{error}</p>}
       <input
         type="text"
         placeholder="Username"

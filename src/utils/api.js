@@ -45,3 +45,10 @@ export const removeFromWatchlist = (imdbID) =>
   request(`/watchlist/remove/${imdbID}`, {
     method: "DELETE",
   });
+
+// New movie discovery endpoints
+export const getTrendingMovies = () => request("/movies/trending");
+
+export const getNewReleases = () => request("/movies/new-releases");
+
+export const getTopRatedMovies = () => request("/movies/top-rated");
