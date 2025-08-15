@@ -7,8 +7,6 @@ import Main from "./components/Main";
 import Box from "./components/Box";
 import MovieList from "./components/MovieList";
 import MovieDetails from "./components/MovieDetails";
-import WatchedSummary from "./components/WatchedSummary";
-import WatchedList from "./components/WatchedList";
 import Loader from "./components/Loader";
 import Auth from "./components/Auth";
 import UserStatus from "./components/UserStatus";
@@ -144,25 +142,9 @@ export default function App() {
     setIsAuthenticated(false);
     setWatched([]);
     setUsername("");
-    setRecommendedMovies([]); // Clear recommended movies
-    setIsLoadingRecommended(false); // Clear loading state
+    setRecommendedMovies([]);
+    setIsLoadingRecommended(false);
   }, []);
-
-  // const handleLogin = useCallback(() => {
-  //   const token = localStorage.getItem('token');
-  //   if (token) {
-  //     const userData = parseJwt(token);
-  //     if (userData && userData.user && userData.user.username) {
-  //       setUsername(userData.user.username);
-  //     }
-  //     setIsAuthenticated(true);
-  //   }
-  //   setShowAuthPage(false);
-  //   if (authRedirectMovieId) {
-  //     setSelectedId(authRedirectMovieId);
-  //     setAuthRedirectMovieId(null);
-  //   }
-  // }, [authRedirectMovieId]);
 
   const handleLogin = useCallback(
     (nameFromLogin) => {
@@ -306,8 +288,8 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
     setSelectedId(id);
     setIsWatchedSelected(isWatched);
-    setQuery(""); // Clear the search query
-    updateUrl({ movieId: id, isWatched }); // Update URL without query
+    setQuery("");
+    updateUrl({ movieId: id, isWatched });
     setTimeout(() => setIsGlobalLoading(false), 300);
   }, []);
 
@@ -421,45 +403,6 @@ export default function App() {
     isLoadingRecommended,
     handleSelectMovie,
     watched,
-    manualSearchTrigger, // Add this dependency
-  ]);
-
-  const rightPanel = useMemo(() => {
-    if (selectedId) {
-      return (
-        <MovieDetails
-          selectedId={selectedId}
-          onCloseMovie={handleCloseMovie}
-          onAddWatched={handleAddWatched}
-          onRemoveWatched={handleRemoveWatched}
-          onSelectMovie={handleSelectMovie}
-          watched={watched}
-          isWatchedSelected={isWatchedSelected}
-          isAuthenticated={isAuthenticated}
-          onLoginRequest={handleLoginRequest}
-        />
-      );
-    }
-    return (
-      <>
-        <WatchedSummary watched={watched} />
-        <WatchedList
-          watched={watched}
-          onSelectMovie={handleSelectMovie}
-          onRemoveWatched={handleRemoveWatched}
-        />
-      </>
-    );
-  }, [
-    selectedId,
-    isWatchedSelected,
-    watched,
-    handleCloseMovie,
-    handleAddWatched,
-    handleRemoveWatched,
-    handleSelectMovie,
-    isAuthenticated,
-    handleLoginRequest,
   ]);
 
   if (showAuthPage) {
@@ -532,7 +475,6 @@ export default function App() {
       <Main className={isGlobalLoading ? "loading" : ""}>
         {selectedId ? (
           query ? (
-            // Two-column layout only when there's a search query
             <>
               <Box title="Movie Search Results">{movieList}</Box>
               <Box title="Movie Details">
@@ -550,7 +492,6 @@ export default function App() {
               </Box>
             </>
           ) : (
-            // Full-screen movie details when no search query
             <div className="full-screen-movie-details">
               <MovieDetails
                 selectedId={selectedId}
@@ -566,92 +507,164 @@ export default function App() {
             </div>
           )
         ) : isAuthenticated ? (
-          // Professional layout for logged-in users
           <div className="authenticated-layout">
-            {/* Main content area with sidebar */}
-            <div className="main-content">
-              {/* Left sidebar - Watchlist */}
-              <aside className="sidebar">
-                <div className="sidebar-section">
-                  <WatchedSummary watched={watched} />
-                  <div className="watchlist-carousel">
-                    {watched.map((movie) => (
-                      <div
-                        key={movie.imdbID}
-                        className="movie-card"
-                        onClick={() => handleSelectMovie(movie.imdbID, true)}
-                      >
-                        <img src={movie.Poster} alt={movie.Title} />
-                        <div className="movie-info">
-                          <h3>{movie.Title}</h3>
-                          <p>{movie.Year}</p>
-                        </div>
-                        <button
-                          className="btn-delete"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemoveWatched(movie.imdbID);
-                          }}
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.5}
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                  {watched.length === 0 && (
-                    <p className="empty-watchlist">
-                      Your watchlist is empty. Add some movies to get started!
-                    </p>
-                  )}
-                </div>
-              </aside>
-
-              {/* Right content - Movie categories and recommendations */}
-              <main className="content-area">
-                {/* Movie Categories */}
-                <section className="movie-section">
-                  <h2 className="section-heading">Discover Movies</h2>
-                  <MovieCategories onSelectMovie={handleSelectMovie} />
-                </section>
-
-                {/* Recommendations Section */}
-                {recommendedMovies.length > 0 && (
+            <main className="content-area">
+              {query ? (
+                <>
                   <section className="movie-section">
-                    <h2 className="section-heading">Recommended for You</h2>
-                    <div className="movie-carousel">
-                      {recommendedMovies.slice(0, 10).map((movie) => (
-                        <div
-                          key={movie.imdbID}
-                          className="movie-card"
-                          onClick={() => handleSelectMovie(movie.imdbID)}
-                        >
-                          <img src={movie.Poster} alt={movie.Title} />
-                          <div className="movie-info">
-                            <h3>{movie.Title}</h3>
-                            <p>{movie.Year}</p>
+                    <h2 className="section-heading">Search Results</h2>
+                    {movieList}
+                  </section>
+                </>
+              ) : (
+                <>
+                  <section className="movie-section">
+                    <div className="watchlist-container">
+                      <div className="watchlist-summary">
+                        <h2>Movies you watched</h2>
+                        {watched.length > 0 && (
+                          <div>
+                            <p>
+                              <span>#️⃣</span>
+                              <span>{watched.length} movies</span>
+                            </p>
+                            <p>
+                              <span>⭐️</span>
+                              <span>
+                                {(
+                                  watched
+                                    .filter((movie) => movie.imdbRating)
+                                    .reduce(
+                                      (acc, movie) => acc + movie.imdbRating,
+                                      0
+                                    ) /
+                                    watched.filter((movie) => movie.imdbRating)
+                                      .length || 0
+                                ).toFixed(2)}
+                              </span>
+                            </p>
+                            <p>
+                              <span>🌟</span>
+                              <span>
+                                {(
+                                  watched
+                                    .filter((movie) => movie.userRating)
+                                    .reduce(
+                                      (acc, movie) => acc + movie.userRating,
+                                      0
+                                    ) /
+                                    watched.filter((movie) => movie.userRating)
+                                      .length || 0
+                                ).toFixed(2)}
+                              </span>
+                            </p>
+                            <p>
+                              <span>⏳</span>
+                              <span>
+                                {Math.round(
+                                  watched
+                                    .filter(
+                                      (movie) =>
+                                        movie.runtime &&
+                                        !isNaN(Number(movie.runtime))
+                                    )
+                                    .reduce(
+                                      (acc, movie) =>
+                                        acc + Number(movie.runtime),
+                                      0
+                                    ) /
+                                    watched.filter(
+                                      (movie) =>
+                                        movie.runtime &&
+                                        !isNaN(Number(movie.runtime))
+                                    ).length || 0
+                                )}{" "}
+                                min
+                              </span>
+                            </p>
                           </div>
-                        </div>
-                      ))}
+                        )}
+                      </div>
+                      <div className="watchlist-movies">
+                        {watched.length > 0 ? (
+                          <div className="movie-carousel watchlist-carousel">
+                            {watched.map((movie) => (
+                              <div
+                                key={movie.imdbID}
+                                className="movie-card"
+                                onClick={() =>
+                                  handleSelectMovie(movie.imdbID, true)
+                                }
+                              >
+                                <img src={movie.Poster} alt={movie.Title} />
+                                <div className="movie-info">
+                                  <h3>{movie.Title}</h3>
+                                  <p>{movie.Year}</p>
+                                </div>
+                                <button
+                                  className="btn-delete"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRemoveWatched(movie.imdbID);
+                                  }}
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth={1.5}
+                                    stroke="currentColor"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="empty-watchlist">
+                            Your watchlist is empty. Add some movies to get
+                            started!
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </section>
-                )}
-              </main>
-            </div>
+
+                  <section className="movie-section">
+                    <h2 className="section-heading">Discover Movies</h2>
+                    <MovieCategories onSelectMovie={handleSelectMovie} />
+                  </section>
+
+                  {recommendedMovies.length > 0 && (
+                    <section className="movie-section">
+                      <h2 className="section-heading">Recommended for You</h2>
+                      <div className="movie-carousel">
+                        {recommendedMovies.slice(0, 10).map((movie) => (
+                          <div
+                            key={movie.imdbID}
+                            className="movie-card"
+                            onClick={() => handleSelectMovie(movie.imdbID)}
+                          >
+                            <img src={movie.Poster} alt={movie.Title} />
+                            <div className="movie-info">
+                              <h3>{movie.Title}</h3>
+                              <p>{movie.Year}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+                </>
+              )}
+            </main>
           </div>
         ) : (
-          // Full-width content for non-logged users
           <div className="full-width-content">{movieList}</div>
         )}
       </Main>

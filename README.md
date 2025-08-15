@@ -6,7 +6,7 @@ MovieMuse is a full-stack application that allows users to search for movies, vi
 
 - **User Authentication**: Secure user registration and login system using JWT and bcrypt.
 - **Personalized Watchlist**: Each user has their own watchlist stored in a MongoDB database.
-- **Powerful Movie Search**: Find movies using the TMDB API with instant results.
+- **Movie Search**: Find movies using the TMDB API with instant results.
 - **Comprehensive Movie Details**: View detailed information including plot, cast, director, ratings, and more.
 - **Personal Rating System**: Rate movies on a scale of 1-10 and add your own reviews.
 - **Smart Recommendations**: Get personalized movie recommendations based on your watchlist.

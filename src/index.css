@@ -372,47 +372,13 @@ body {
 }
 
 .loader-spinner {
-  display: inline-block;
-  position: relative;
-  width: 80px;
-  height: 80px;
-}
-
-.loader-spinner div {
-  display: inline-block;
-  position: absolute;
-  left: 8px;
-  width: 16px;
-  background: var(--color-primary);
-  animation: loader-spinner 1.2s cubic-bezier(0, 0.5, 0.5, 1) infinite;
-}
-
-.loader-spinner div:nth-child(1) {
-  left: 8px;
-  animation-delay: -0.24s;
-}
-
-.loader-spinner div:nth-child(2) {
-  left: 32px;
-  animation-delay: -0.12s;
-}
-
-.loader-spinner div:nth-child(3) {
-  left: 56px;
-  animation-delay: 0;
-}
-
-@keyframes loader-spinner {
-  0% {
-    top: 8px;
-    height: 64px;
-  }
-
-  50%,
-  100% {
-    top: 24px;
-    height: 32px;
-  }
+  width: 60px;
+  height: 60px;
+  border: 6px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
 }
 
 @keyframes fadeIn {
@@ -2095,6 +2061,22 @@ body {
 }
 
 /* Responsive design for category sections */
+@media (max-width: 1200px) {
+  .movie-categories .list li {
+    min-width: 180px;
+    max-width: 180px;
+    padding: 1.1rem;
+  }
+
+  .movie-categories .list img {
+    height: 240px;
+  }
+
+  .movie-categories .list h3 {
+    font-size: 1.3rem;
+  }
+}
+
 @media (max-width: 768px) {
   .movie-categories {
     gap: 2rem;
@@ -2580,7 +2562,6 @@ body {
   margin: 0 auto;
   padding: 0 2rem;
 }
-
 .content-area {
   display: flex;
   flex-direction: column;
@@ -2590,7 +2571,7 @@ body {
 }
 
 .movie-section {
-  width: 100%;
+  width: 94vw;
   max-width: 100%;
 }
 
@@ -2933,4 +2914,218 @@ body {
   border: 1px solid var(--color-border);
   width: 100%;
   margin-bottom: 2rem;
+}
+
+/* Watchlist header with summary */
+.watchlist-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-bottom: 2.4rem;
+}
+
+.watchlist-header .section-heading {
+  margin-bottom: 0;
+}
+
+.watchlist-header .summary {
+  background-color: var(--color-primary);
+  color: white;
+  border-radius: var(--border-radius-lg);
+  padding: 2rem 2.4rem;
+  box-shadow: var(--shadow-md);
+}
+
+.watchlist-header .summary h2 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  font-family: var(--font-display);
+  letter-spacing: 0.05em;
+  text-align: center;
+}
+
+.watchlist-header .summary div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  justify-content: center;
+}
+
+.watchlist-header .summary p {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.3rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 0.8rem 1.2rem;
+  border-radius: var(--border-radius-md);
+  backdrop-filter: blur(5px);
+}
+
+/* Responsive design for watchlist header */
+@media (max-width: 768px) {
+  .watchlist-header {
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .watchlist-header .summary {
+    padding: 1.5rem 2rem;
+  }
+
+  .watchlist-header .summary h2 {
+    font-size: 1.6rem;
+  }
+
+  .watchlist-header .summary div {
+    gap: 1rem;
+  }
+
+  .watchlist-header .summary p {
+    font-size: 1.2rem;
+    padding: 0.6rem 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .watchlist-header .summary div {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .watchlist-header .summary p {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Watchlist container with summary and movies */
+.watchlist-container {
+  background-color: var(--color-primary);
+  color: white;
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.watchlist-summary {
+  padding: 2.4rem 3.2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.watchlist-summary h2 {
+  font-size: 2.2rem;
+  font-weight: 600;
+  margin-bottom: 1.2rem;
+  font-family: var(--font-display);
+  letter-spacing: 0.05em;
+}
+
+.watchlist-summary div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.6rem;
+}
+
+.watchlist-summary p {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 1.4rem;
+}
+
+.watchlist-movies {
+  background-color: #1e293b;
+  padding: 2rem 3.2rem;
+}
+
+.watchlist-movies .movie-carousel {
+  gap: 1.6rem;
+}
+
+.watchlist-movies .movie-card {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.watchlist-movies .movie-card:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-6px);
+}
+
+.watchlist-movies .movie-info h3 {
+  color: white;
+}
+
+.watchlist-movies .movie-info p {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.watchlist-movies .empty-watchlist {
+  color: rgba(255, 255, 255, 0.8);
+  text-align: center;
+  font-size: 1.6rem;
+  font-style: italic;
+  padding: 2rem 1rem;
+}
+
+/* Responsive design for watchlist container */
+@media (max-width: 768px) {
+  .watchlist-summary {
+    padding: 2rem 2.4rem;
+  }
+
+  .watchlist-summary h2 {
+    font-size: 2rem;
+  }
+
+  .watchlist-summary div {
+    gap: 1.2rem;
+  }
+
+  .watchlist-summary p {
+    font-size: 1.3rem;
+  }
+
+  .watchlist-movies {
+    padding: 1.5rem 2.4rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .watchlist-summary {
+    padding: 1.5rem 2rem;
+  }
+
+  .watchlist-summary h2 {
+    font-size: 1.8rem;
+  }
+
+  .watchlist-summary div {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .watchlist-summary p {
+    font-size: 1.2rem;
+  }
+
+  .watchlist-movies {
+    padding: 1rem 2rem;
+  }
+}
+
+/* Responsive design for watchlist carousel */
+@media (max-width: 768px) {
+  .watchlist-carousel {
+    gap: 1.2rem;
+  }
+}
+@media (max-width: 480px) {
+  .watchlist-carousel {
+    gap: 1rem;
+  }
 }

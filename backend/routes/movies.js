@@ -6,11 +6,18 @@ dotenv.config();
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 
+if (!TMDB_API_KEY || TMDB_API_KEY === "your_tmdb_api_key_here") {
+  console.error("FATAL ERROR: TMDB_API_KEY is not defined in your backend/.env file.");
+}
+
 const cache = {};
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 // Helper function for TMDB calls with caching + fallback
 async function fetchFromTMDB(endpoint, cacheKey) {
+  if (!TMDB_API_KEY || TMDB_API_KEY === "your_tmdb_api_key_here") {
+    throw new Error("TMDB_API_KEY not configured.");
+  }
   const now = Date.now();
 
   // Return cached data if still valid
@@ -53,9 +60,10 @@ async function fetchFromTMDB(endpoint, cacheKey) {
 router.get("/trending", async (req, res) => {
   try {
     const data = await fetchFromTMDB("/trending/movie/week", "trending");
+    res.set("Cache-Control", "public, max-age=300"); // 5 minutes
     res.json(data.results);
-  } catch {
-    res.status(500).json({ msg: "Server Error" });
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
   }
 });
 
@@ -68,18 +76,20 @@ router.get("/new-releases", async (req, res) => {
 
     const endpoint = `/discover/movie?primary_release_date.gte=${lastMonthStr}&primary_release_date.lte=${today}&sort_by=release_date.desc`;
     const data = await fetchFromTMDB(endpoint, "new-releases");
+    res.set("Cache-Control", "public, max-age=300"); // 5 minutes
     res.json(data.results);
-  } catch {
-    res.status(500).json({ msg: "Server Error" });
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
   }
 });
 
 router.get("/top-rated", async (req, res) => {
   try {
     const data = await fetchFromTMDB("/movie/top_rated", "top-rated");
+    res.set("Cache-Control", "public, max-age=300"); // 5 minutes
     res.json(data.results);
-  } catch {
-    res.status(500).json({ msg: "Server Error" });
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
   }
 });
 

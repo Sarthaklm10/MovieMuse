@@ -600,7 +600,6 @@ function MovieDetails({
           <div className="user-review">
             <h3>Your Review</h3>
             <div className="rating-display">
-              {/* Simple inline display of user rating */}
               <div className="rating-value-inline">
                 🌟 {watchedMovie.userRating}/10
               </div>
@@ -619,10 +618,16 @@ function MovieDetails({
           </div>
         )}
 
-        {/* Rating form for new movie or editing */}
-        {(!watchedMovie || isEditingReview) && (
+        {/* Rating form for new movie or when no review yet, or editing */}
+        {isAuthenticated && (!watchedMovie?.userReview || isEditingReview) && (
           <form onSubmit={handleSubmit} className="rating">
-            <h3>{watchedMovie ? "Edit your rating" : "Rate this movie"}</h3>
+            <h3>
+              {watchedMovie
+                ? watchedMovie.userReview
+                  ? "Edit your rating"
+                  : "Add your review"
+                : "Rate this movie"}
+            </h3>
 
             <div className="rating-stars">
               <StarRating
@@ -635,7 +640,9 @@ function MovieDetails({
               />
             </div>
 
-            {(userRating > 0 || (!watchedMovie && isAuthenticated)) && (
+            {(userRating > 0 ||
+              watchedMovie?.userRating > 0 ||
+              (!watchedMovie && isAuthenticated)) && (
               <>
                 <textarea
                   className="review-input"
@@ -650,7 +657,11 @@ function MovieDetails({
                   }}
                 />
                 <button type="submit" className="btn-add">
-                  {watchedMovie ? "Update rating" : "+ Add to list"}
+                  {watchedMovie
+                    ? watchedMovie.userReview
+                      ? "Update review"
+                      : "Save review"
+                    : "+ Add to list"}
                 </button>
               </>
             )}
