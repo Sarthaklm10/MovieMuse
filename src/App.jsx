@@ -347,17 +347,17 @@ export default function App() {
     updateUrl({});
   }, []);
 
-  const handleQueryChange = useCallback(
-    (newQuery) => {
-      setQuery(newQuery);
-      updateUrl({
-        query: newQuery,
-        movieId: selectedId,
-        isWatched: isWatchedSelected,
-      });
-    },
-    [selectedId, isWatchedSelected]
-  );
+  const handleQueryChange = useCallback((newQuery) => {
+    setQuery(newQuery);
+    if (newQuery.length < 3) {
+      setManualSearchTrigger(0); // Reset manual search trigger when query is short
+    }
+    updateUrl({
+      query: newQuery,
+      movieId: selectedId,
+      isWatched: isWatchedSelected,
+    });
+  }, [selectedId, isWatchedSelected]);
 
   const handleManualSearch = useCallback(() => {
     if (query.trim()) {
@@ -386,7 +386,7 @@ export default function App() {
       );
     }
     if (isLoadingRecommended) return <Loader />;
-    if (!query) {
+    if (!query || (query.length < 3 && manualSearchTrigger === 0)) {
       return <MovieCategories onSelectMovie={handleSelectMovie} />;
     }
     return (
@@ -403,6 +403,7 @@ export default function App() {
     isLoadingRecommended,
     handleSelectMovie,
     watched,
+    manualSearchTrigger,
   ]);
 
   if (showAuthPage) {

@@ -1,5 +1,7 @@
 import { TMDB_API_KEY, TMDB_BASE_URL, TMDB_IMAGE_URL } from "./constants";
 
+const TMDB_IMAGE_URL_ORIGINAL = "https://image.tmdb.org/t/p/original";
+
 // Common genre IDs for TMDB API
 export const TMDB_GENRES = {
   "Action": 28,
@@ -114,6 +116,7 @@ export function convertTMDBMovie(tmdbMovie) {
     Title: tmdbMovie.title,
     Year: tmdbMovie.release_date ? tmdbMovie.release_date.split('-')[0] : 'N/A',
     Poster: tmdbMovie.poster_path ? `${TMDB_IMAGE_URL}${tmdbMovie.poster_path}` : 'N/A',
+    backdrop_path: tmdbMovie.backdrop_path ? `${TMDB_IMAGE_URL_ORIGINAL}${tmdbMovie.backdrop_path}` : null,
     Type: 'movie',
     // Store TMDB specific data
     tmdbRating: tmdbMovie.vote_average,

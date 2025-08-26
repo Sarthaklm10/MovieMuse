@@ -7,6 +7,7 @@ import {
 import { convertTMDBMovie } from "../utils/tmdbApi";
 import MovieList from "./MovieList";
 import Loader from "./Loader";
+import Hero from "./Hero";
 
 const MovieCategories = ({ onSelectMovie }) => {
   const [categories, setCategories] = useState({
@@ -105,6 +106,7 @@ const MovieCategories = ({ onSelectMovie }) => {
 
   return (
     <div className="movie-categories">
+      <Hero onSelectMovie={onSelectMovie} />
       {categoryConfig.map(renderCategorySection)}
     </div>
   );

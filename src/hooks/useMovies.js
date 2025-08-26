@@ -64,12 +64,23 @@ export default function useMovies(query, manualSearchTrigger = 0) {
 
     // For very short queries, don't show loading state unless manual search
     if (query.length < 3 && manualSearchTrigger === 0) {
-      if (prevQuery.current.length >= 3) {
+      if (prevQuery.current.length >= 3 || manualSearchTrigger > 0) {
         setMovies([]);
         setError("");
       }
       setIsLoading(false);
       return;
+    }
+
+    if (query.length < 3) {
+      if (manualSearchTrigger > 0) {
+        // Allow search for short queries on manual trigger (e.g., Enter press)
+      } else {
+        setMovies([]);
+        setError("");
+        setIsLoading(false);
+        return;
+      }
     }
 
     // Show loading state with a slight delay to prevent flickering
