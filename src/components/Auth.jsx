@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import Login from './Login';
-import Signup from './Signup';
-import './Auth.css';
+import React, { useState } from "react";
+import Login from "./Login";
+import Signup from "./Signup";
+import "./Auth.css";
 
 function Auth({ onLogin }) {
   const [showLogin, setShowLogin] = useState(true);
@@ -18,7 +18,10 @@ function Auth({ onLogin }) {
         ) : (
           <Signup onSignupSuccess={() => setShowLogin(true)} />
         )}
-        <button className="toggle-auth" onClick={() => setShowLogin(!showLogin)}>
+        <button
+          className="toggle-auth"
+          onClick={() => setShowLogin(!showLogin)}
+        >
           {showLogin ? "Need an account? Sign Up" : "Have an account? Log In"}
         </button>
       </div>

@@ -1,9 +1,8 @@
-
-import React, { useState, useEffect } from 'react';
-import { getTrendingMovies } from '../utils/api';
-import { convertTMDBMovie } from '../utils/tmdbApi';
-import Loader from './Loader';
-import './Hero.css';
+import React, { useState, useEffect } from "react";
+import { getTrendingMovies } from "../utils/api";
+import { convertTMDBMovie } from "../utils/tmdbApi";
+import Loader from "./Loader";
+import "./Hero.css";
 
 const Hero = ({ onSelectMovie }) => {
   const [heroMovie, setHeroMovie] = useState(null);
@@ -13,21 +12,42 @@ const Hero = ({ onSelectMovie }) => {
   useEffect(() => {
     const fetchHeroMovie = async () => {
       try {
-        const trendingMovies = await getTrendingMovies();
-        if (trendingMovies && trendingMovies.length > 0) {
-          const suitableMovie = trendingMovies.find(movie => movie.backdrop_path);
+        const responseData = await getTrendingMovies();
+        let moviesToProcess = [];
+        let isFallbackData = false;
+
+        if (responseData && responseData.isFallback) {
+          moviesToProcess = responseData.movies;
+          isFallbackData = true;
+        } else if (responseData) {
+          moviesToProcess = responseData;
+        }
+
+        if (moviesToProcess && moviesToProcess.length > 0) {
+          let heroCandidate = moviesToProcess.find(
+            (movie) => movie.Poster || movie.poster_path || movie.backdrop_path // Prioritize converted, then raw TMDB
+          );
+
+          if (heroCandidate && !isFallbackData && heroCandidate.poster_path) {
+            // If it's a raw TMDB movie and not fallback, convert it
+            heroCandidate = convertTMDBMovie(heroCandidate);
+          }
+
+          const suitableMovie = heroCandidate;
+
           if (suitableMovie) {
-            const convertedMovie = convertTMDBMovie(suitableMovie);
-            setHeroMovie(convertedMovie);
+            setHeroMovie(suitableMovie);
           } else {
-            setError('Could not find a trending movie with a suitable backdrop.');
+            setError(
+              "Could not find a trending movie with a suitable backdrop."
+            );
           }
         } else {
-          setError('No trending movies found.');
+          setError("No trending movies found.");
         }
       } catch (err) {
-        console.error('Error fetching hero movie:', err);
-        setError('Failed to load trending movies.');
+        console.error("Error fetching hero movie:", err);
+        setError("Failed to load trending movies.");
       } finally {
         setIsLoading(false);
       }
@@ -64,7 +84,7 @@ const Hero = ({ onSelectMovie }) => {
       <div
         className="hero-background"
         style={{
-          backgroundImage: `url(${heroMovie.backdrop_path})`,
+          backgroundImage: `url(${heroMovie.Poster})`,
         }}
       />
       <div className="hero-content">

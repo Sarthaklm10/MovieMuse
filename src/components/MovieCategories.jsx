@@ -4,10 +4,11 @@ import {
   getNewReleases,
   getTopRatedMovies,
 } from "../utils/api";
-import { convertTMDBMovie } from "../utils/tmdbApi";
+import { convertTMDBMovie, getMoviesByGenre } from "../utils/tmdbApi";
 import MovieList from "./MovieList";
 import Loader from "./Loader";
 import Hero from "./Hero";
+import GenreList from "./GenreList";
 
 const MovieCategories = ({ onSelectMovie }) => {
   const [categories, setCategories] = useState({
@@ -15,6 +16,8 @@ const MovieCategories = ({ onSelectMovie }) => {
     "new-releases": { movies: [], isLoading: false, error: null },
     "top-rated": { movies: [], isLoading: false, error: null },
   });
+  const [genreMovies, setGenreMovies] = useState([]);
+  const [selectedGenre, setSelectedGenre] = useState(null);
 
   const categoryConfig = [
     { id: "trending", label: "Trending", fetchFn: getTrendingMovies },
@@ -29,14 +32,23 @@ const MovieCategories = ({ onSelectMovie }) => {
     }));
 
     try {
-      const rawMovies = await fetchFn();
-      const convertedMovies = rawMovies
-        .map(convertTMDBMovie)
-        .filter(
-          (movie) =>
-            movie && movie.Title && movie.Poster && movie.Poster !== "N/A"
-        );
+      const responseData = await fetchFn();
+      let moviesToProcess = [];
 
+      if (responseData && responseData.isFallback) {
+        // Data is from fallback, already converted
+        moviesToProcess = responseData.movies;
+      } else if (responseData) {
+        // Data is from API, needs conversion
+        moviesToProcess = responseData.map(convertTMDBMovie);
+      }
+
+      const convertedMovies = moviesToProcess.filter(
+        (movie) =>
+          movie && movie.Title && movie.Poster && movie.Poster !== "N/A"
+      );
+
+      console.log(`Processed movies for ${categoryId}:`, convertedMovies);
       setCategories((prev) => ({
         ...prev,
         [categoryId]: {
@@ -64,6 +76,13 @@ const MovieCategories = ({ onSelectMovie }) => {
       fetchCategoryMovies(category.id, category.fetchFn);
     });
   }, []);
+
+  const handleGenreSelect = async (genreId, genreName) => {
+    setSelectedGenre(genreName);
+    setGenreMovies([]);
+    const movies = await getMoviesByGenre(genreId);
+    setGenreMovies(movies.map(convertTMDBMovie).filter(Boolean));
+  };
 
   const renderCategorySection = (category) => {
     const { movies, isLoading, error } = categories[category.id];
@@ -107,6 +126,15 @@ const MovieCategories = ({ onSelectMovie }) => {
   return (
     <div className="movie-categories">
       <Hero onSelectMovie={onSelectMovie} />
+      <GenreList onGenreSelect={handleGenreSelect} />
+      {selectedGenre && (
+        <div className="category-section">
+          <h3 className="category-title">{selectedGenre}</h3>
+          <div className="category-content">
+            <MovieList movies={genreMovies} onSelectMovie={onSelectMovie} />
+          </div>
+        </div>
+      )}
       {categoryConfig.map(renderCategorySection)}
     </div>
   );

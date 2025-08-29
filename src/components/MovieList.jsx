@@ -1,5 +1,5 @@
-import React from 'react';
-import Movie from './Movie';
+import React from "react";
+import Movie from "./Movie";
 
 function MovieList({ movies, onSelectMovie, onCloseMovie }) {
   return (
@@ -11,4 +11,4 @@ function MovieList({ movies, onSelectMovie, onCloseMovie }) {
   );
 }
 
-export default MovieList; 
+export default MovieList;

@@ -2964,6 +2964,58 @@ body {
   backdrop-filter: blur(5px);
 }
 
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-background-alt);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-primary);
+  border-radius: 20px;
+  border: 2px solid var(--color-background-alt);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.search-results-container {
+  background-color: var(--color-background-alt);
+  padding: 2rem;
+  border-radius: var(--border-radius-lg);
+}
+
+.full-width-content {
+  grid-column: 1 / -1; /* Span across all columns */
+  min-height: calc(100vh - 10rem); /* Adjust based on your header height */
+}
+
+.full-width-content .list-movies {
+  max-height: none; /* Remove max-height for search results */
+}
+
+@media (max-width: 1000px) {
+  .main {
+    grid-template-columns: 1fr;
+    max-width: 100%;
+    padding: 0 2rem;
+  }
+
+  .list-movies {
+    max-height: none;
+  }
+
+  .details,
+  .summary {
+    border-radius: var(--border-radius-lg);
+  }
+}
+
 /* Responsive design for watchlist header */
 @media (max-width: 768px) {
   .watchlist-header {

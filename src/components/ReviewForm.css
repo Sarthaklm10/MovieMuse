@@ -1,0 +1,74 @@
+.review-form {
+  margin-top: 2.4rem; /* Consistent spacing */
+}
+
+.review-form h3 {
+  font-size: 2.2rem; /* Consistent with other section headings */
+  font-weight: 700;
+  margin-bottom: 1.6rem;
+  font-family: var(--font-display);
+  color: var(--color-text);
+  letter-spacing: 0.04em;
+  position: relative;
+  padding-bottom: 0.8rem;
+}
+
+.review-form h3::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 6rem;
+  height: 3px;
+  background-color: var(--color-primary);
+  border-radius: 2px;
+}
+
+.review-form textarea {
+  width: 100%;
+  height: 120px; /* Slightly increased height */
+  padding: 1.2rem 1.6rem; /* Consistent with other inputs */
+  border: 1px solid var(--color-border); /* Use variable */
+  border-radius: var(--border-radius-md); /* Use variable */
+  background-color: var(--color-input-background); /* Use variable */
+  color: var(--color-input-text); /* Use variable */
+  font-size: 1.6rem; /* Consistent font size */
+  font-family: var(--font-primary); /* Consistent font family */
+  margin-top: 1.6rem; /* Consistent spacing */
+  resize: vertical;
+  transition: all 0.3s ease;
+}
+
+.review-form textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.2); /* Consistent focus style */
+}
+
+.review-form textarea::placeholder {
+  color: var(--color-text-light); /* Consistent placeholder color */
+  opacity: 0.7;
+}
+
+.review-form button {
+  background-color: var(--color-primary); /* Blue background */
+  color: white; /* White text */
+  border: none;
+  padding: 1.4rem 2.8rem; /* Consistent padding */
+  border-radius: var(--border-radius-md); /* Consistent border-radius */
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 1.6rem; /* Consistent spacing */
+  font-size: 1.6rem; /* Consistent font size */
+  font-weight: 600; /* Consistent font weight */
+  font-family: var(--font-primary); /* Consistent font family */
+  box-shadow: var(--shadow-md); /* Consistent shadow */
+  display: block; /* Make it a block element to center with margin auto */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.review-form button:hover {
+  background-color: var(--color-primary-dark); /* Darker blue on hover */
+  transform: translateY(-2px); /* Consistent hover effect */
+}

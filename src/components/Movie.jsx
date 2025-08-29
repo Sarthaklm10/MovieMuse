@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 function Movie({ movie, onSelectMovie }) {
   const poster = movie.Poster || movie.poster;
@@ -6,7 +6,10 @@ function Movie({ movie, onSelectMovie }) {
   const year = movie.Year || movie.year;
 
   return (
-    <li onClick={() => onSelectMovie(movie.imdbID)} data-movie-id={movie.imdbID}>
+    <li
+      onClick={() => onSelectMovie(movie.imdbID)}
+      data-movie-id={movie.imdbID}
+    >
       {poster === "N/A" ? (
         <div className="no-poster">{title}</div>
       ) : (
@@ -23,4 +26,4 @@ function Movie({ movie, onSelectMovie }) {
   );
 }
 
-export default Movie; 
+export default Movie;

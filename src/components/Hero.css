@@ -1,12 +1,14 @@
 .hero-container {
   position: relative;
-  width: 100%;
+  width: calc(100% + 4rem);
   height: 65vh;
   color: #fff;
   margin-bottom: 2.5rem;
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
+  margin-left: -2rem;
+  margin-right: -2rem;
 }
 
 .hero-background {
@@ -57,8 +59,12 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  height: 65vh;
+  width: calc(100% + 4rem);
   background-color: #1a1a1a;
   cursor: default;
+  margin-left: -2rem;
+  margin-right: -2rem;
 }
 
 .hero-content {

@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 const authRoutes = require("./routes/auth");
 const watchlistRoutes = require("./routes/watchlist");
 const moviesRoutes = require("./routes/movies");
+const reviewsRoutes = require("./routes/reviews");
 
 if (!process.env.JWT_SECRET) {
   console.error("FATAL ERROR: JWT_SECRET is not defined in your .env file.");
@@ -49,6 +50,7 @@ mongoose
 app.use("/api/auth", authRoutes);
 app.use("/api/watchlist", watchlistRoutes);
 app.use("/api/movies", moviesRoutes);
+app.use("/api/reviews", reviewsRoutes);
 
 // Start server
 app.listen(port, () => {

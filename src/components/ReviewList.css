@@ -1,0 +1,26 @@
+.review-list {
+  margin-top: 2.4rem; /* Slightly increased margin for consistency */
+}
+
+.review-list h3 {
+  font-size: 2.2rem; /* Consistent with other section headings */
+  font-weight: 700; /* Consistent with other section headings */
+  margin-bottom: 1.6rem; /* Consistent spacing */
+  font-family: var(--font-display); /* Consistent font family */
+  color: var(--color-text); /* Consistent text color */
+  letter-spacing: 0.04em; /* Consistent letter spacing */
+  position: relative; /* For potential ::after pseudo-element */
+  padding-bottom: 0.8rem; /* For potential ::after pseudo-element */
+}
+
+/* Add a consistent underline for the heading */
+.review-list h3::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 6rem; /* Consistent width for underline */
+  height: 3px; /* Consistent height for underline */
+  background-color: var(--color-primary); /* Consistent color for underline */
+  border-radius: 2px; /* Consistent border-radius */
+}

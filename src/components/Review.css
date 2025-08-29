@@ -1,0 +1,35 @@
+.review {
+  background-color: var(--color-background-alt); /* Consistent with other boxes */
+  padding: 1.5rem; /* Slightly more padding */
+  border-radius: var(--border-radius-md); /* Use variable for consistency */
+  margin-bottom: 1.5rem; /* Consistent spacing */
+  box-shadow: var(--shadow-sm); /* Add subtle shadow */
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.8rem; /* Consistent spacing */
+}
+
+.review-username {
+  font-weight: 600; /* Slightly bolder */
+  color: var(--color-text); /* Explicit text color */
+  font-size: 1.6rem; /* Consistent with general text */
+}
+
+.review-comment {
+  font-size: 1.6rem; /* Increased font size for readability */
+  line-height: 1.6; /* Improved line height */
+  color: var(--color-text-light); /* Consistent text color */
+}
+
+.review-rating {
+  font-size: 1.6rem; /* Consistent with username and comment */
+  font-weight: 600;
+  color: var(--color-primary); /* Use primary color for emphasis */
+  background-color: rgba(var(--color-primary-rgb), 0.1); /* Light background */
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--border-radius-sm);
+}

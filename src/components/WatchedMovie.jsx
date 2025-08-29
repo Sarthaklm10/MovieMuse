@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 function WatchedMovie({ movie, onSelectMovie, onRemoveWatched }) {
   const poster = movie.Poster || movie.poster;
@@ -51,4 +51,4 @@ function WatchedMovie({ movie, onSelectMovie, onRemoveWatched }) {
   );
 }
 
-export default WatchedMovie; 
+export default WatchedMovie;

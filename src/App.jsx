@@ -134,7 +134,12 @@ export default function App() {
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
   const [watched, setWatched] = useState([]);
   const [manualSearchTrigger, setManualSearchTrigger] = useState(0);
-  const { movies, isLoading, error } = useMovies(query, manualSearchTrigger);
+  const [selectedGenreId, setSelectedGenreId] = useState(null);
+  const { movies, isLoading, error } = useMovies(
+    query,
+    manualSearchTrigger,
+    selectedGenreId
+  );
   const [theme, setTheme] = useLocalStorage("dark", "theme");
 
   const handleLogout = useCallback(() => {
@@ -344,7 +349,16 @@ export default function App() {
     setSelectedId(null);
     setIsWatchedSelected(false);
     setManualSearchTrigger(0);
+    setSelectedGenreId(null);
     updateUrl({});
+  }, []);
+
+  const handleGenreSelect = useCallback((genreId) => {
+    setQuery("");
+    setSelectedId(null);
+    setIsWatchedSelected(false);
+    setManualSearchTrigger(0);
+    setSelectedGenreId(genreId);
   }, []);
 
   const handleQueryChange = useCallback((newQuery) => {
@@ -367,9 +381,17 @@ export default function App() {
 
   const movieList = useMemo(() => {
     if (error) return <p className="error">{error}</p>;
-    if (isLoading) return <Loader />;
-    if (movies.length > 0)
+
+    if (query.length > 0 && isLoading) return <Loader />;
+
+    if (movies.length > 0 && query.length >= 3) {
       return <MovieList movies={movies} onSelectMovie={handleSelectMovie} />;
+    }
+
+    if (movies.length > 0 && manualSearchTrigger > 0) {
+      return <MovieList movies={movies} onSelectMovie={handleSelectMovie} />;
+    }
+
     if (!query && recommendedMovies.length > 0) {
       const watchedIds = new Set(watched.map((m) => m.imdbID));
       const filteredRecommendations = recommendedMovies.filter(
@@ -385,13 +407,25 @@ export default function App() {
         </div>
       );
     }
+
     if (isLoadingRecommended) return <Loader />;
-    if (!query || (query.length < 3 && manualSearchTrigger === 0)) {
-      return <MovieCategories onSelectMovie={handleSelectMovie} />;
+
+    if (!query && !selectedGenreId) {
+      return (
+        <MovieCategories
+          onSelectMovie={handleSelectMovie}
+          onGenreSelect={handleGenreSelect}
+        />
+      );
     }
+
+    if (selectedGenreId && movies.length > 0) {
+      return <MovieList movies={movies} onSelectMovie={handleSelectMovie} />;
+    }
+
     return (
       <p className="no-results">
-        Search for a movie or check your watchlist for recommendations!
+        No results found for "{query}". Try a different search!
       </p>
     );
   }, [
@@ -404,6 +438,8 @@ export default function App() {
     handleSelectMovie,
     watched,
     manualSearchTrigger,
+    selectedGenreId,
+    handleGenreSelect,
   ]);
 
   if (showAuthPage) {
@@ -474,199 +510,177 @@ export default function App() {
       </NavBar>
 
       <Main className={isGlobalLoading ? "loading" : ""}>
-        {selectedId ? (
-          query ? (
-            <>
-              <Box title="Movie Search Results">{movieList}</Box>
-              <Box title="Movie Details">
-                <MovieDetails
-                  selectedId={selectedId}
-                  onCloseMovie={handleCloseMovie}
-                  onAddWatched={handleAddWatched}
-                  onRemoveWatched={handleRemoveWatched}
-                  onSelectMovie={handleSelectMovie}
-                  watched={watched}
-                  isWatchedSelected={isWatchedSelected}
-                  isAuthenticated={isAuthenticated}
-                  onLoginRequest={handleLoginRequest}
-                />
-              </Box>
-            </>
-          ) : (
-            <div className="full-screen-movie-details">
-              <MovieDetails
-                selectedId={selectedId}
-                onCloseMovie={handleCloseMovie}
-                onAddWatched={handleAddWatched}
-                onRemoveWatched={handleRemoveWatched}
-                onSelectMovie={handleSelectMovie}
-                watched={watched}
-                isWatchedSelected={isWatchedSelected}
-                isAuthenticated={isAuthenticated}
-                onLoginRequest={handleLoginRequest}
-              />
-            </div>
-          )
+        {query.length >= 3 || manualSearchTrigger > 0 ? (
+          <div className="full-width-content search-results-container">
+            {movieList}
+          </div>
+        ) : selectedId ? (
+          <div className="full-screen-movie-details">
+            <MovieDetails
+              selectedId={selectedId}
+              onCloseMovie={handleCloseMovie}
+              onAddWatched={handleAddWatched}
+              onRemoveWatched={handleRemoveWatched}
+              onSelectMovie={handleSelectMovie}
+              watched={watched}
+              isWatchedSelected={isWatchedSelected}
+              isAuthenticated={isAuthenticated}
+              onLoginRequest={handleLoginRequest}
+            />
+          </div>
         ) : isAuthenticated ? (
           <div className="authenticated-layout">
             <main className="content-area">
-              {query ? (
-                <>
-                  <section className="movie-section">
-                    <h2 className="section-heading">Search Results</h2>
-                    {movieList}
-                  </section>
-                </>
-              ) : (
-                <>
-                  <section className="movie-section">
-                    <div className="watchlist-container">
-                      <div className="watchlist-summary">
-                        <h2>Movies you watched</h2>
-                        {watched.length > 0 && (
-                          <div>
-                            <p>
-                              <span>#️⃣</span>
-                              <span>{watched.length} movies</span>
-                            </p>
-                            <p>
-                              <span>⭐️</span>
-                              <span>
-                                {(
-                                  watched
-                                    .filter((movie) => movie.imdbRating)
-                                    .reduce(
-                                      (acc, movie) => acc + movie.imdbRating,
-                                      0
-                                    ) /
-                                    watched.filter((movie) => movie.imdbRating)
-                                      .length || 0
-                                ).toFixed(2)}
-                              </span>
-                            </p>
-                            <p>
-                              <span>🌟</span>
-                              <span>
-                                {(
-                                  watched
-                                    .filter((movie) => movie.userRating)
-                                    .reduce(
-                                      (acc, movie) => acc + movie.userRating,
-                                      0
-                                    ) /
-                                    watched.filter((movie) => movie.userRating)
-                                      .length || 0
-                                ).toFixed(2)}
-                              </span>
-                            </p>
-                            <p>
-                              <span>⏳</span>
-                              <span>
-                                {Math.round(
-                                  watched
-                                    .filter(
-                                      (movie) =>
-                                        movie.runtime &&
-                                        !isNaN(Number(movie.runtime))
-                                    )
-                                    .reduce(
-                                      (acc, movie) =>
-                                        acc + Number(movie.runtime),
-                                      0
-                                    ) /
-                                    watched.filter(
-                                      (movie) =>
-                                        movie.runtime &&
-                                        !isNaN(Number(movie.runtime))
-                                    ).length || 0
-                                )}{" "}
-                                min
-                              </span>
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                      <div className="watchlist-movies">
-                        {watched.length > 0 ? (
-                          <div className="movie-carousel watchlist-carousel">
-                            {watched.map((movie) => (
-                              <div
-                                key={movie.imdbID}
-                                className="movie-card"
-                                onClick={() =>
-                                  handleSelectMovie(movie.imdbID, true)
-                                }
-                              >
-                                <img src={movie.Poster} alt={movie.Title} />
-                                <div className="movie-info">
-                                  <h3>{movie.Title}</h3>
-                                  <p>{movie.Year}</p>
-                                </div>
-                                <button
-                                  className="btn-delete"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleRemoveWatched(movie.imdbID);
-                                  }}
-                                >
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={1.5}
-                                    stroke="currentColor"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                                    />
-                                  </svg>
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="empty-watchlist">
-                            Your watchlist is empty. Add some movies to get
-                            started!
+              <>
+                <section className="movie-section">
+                  <div className="watchlist-container">
+                    <div className="watchlist-summary">
+                      <h2>Movies you watched</h2>
+                      {watched.length > 0 && (
+                        <div>
+                          <p>
+                            <span>#️⃣</span>
+                            <span>{watched.length} movies</span>
                           </p>
-                        )}
-                      </div>
+                          <p>
+                            <span>⭐️</span>
+                            <span>
+                              {(
+                                watched
+                                  .filter((movie) => movie.imdbRating)
+                                  .reduce(
+                                    (acc, movie) => acc + movie.imdbRating,
+                                    0
+                                  ) /
+                                  watched.filter((movie) => movie.imdbRating)
+                                    .length || 0
+                              ).toFixed(2)}
+                            </span>
+                          </p>
+                          <p>
+                            <span>🌟</span>
+                            <span>
+                              {(
+                                watched
+                                  .filter((movie) => movie.userRating)
+                                  .reduce(
+                                    (acc, movie) => acc + movie.userRating,
+                                    0
+                                  ) /
+                                  watched.filter((movie) => movie.userRating)
+                                    .length || 0
+                              ).toFixed(2)}
+                            </span>
+                          </p>
+                          <p>
+                            <span>⏳</span>
+                            <span>
+                              {Math.round(
+                                watched
+                                  .filter(
+                                    (movie) =>
+                                      movie.runtime &&
+                                      !isNaN(Number(movie.runtime))
+                                  )
+                                  .reduce(
+                                    (acc, movie) =>
+                                      acc + Number(movie.runtime),
+                                    0
+                                  ) /
+                                  watched.filter(
+                                    (movie) =>
+                                      movie.runtime &&
+                                      !isNaN(Number(movie.runtime))
+                                  ).length || 0
+                              )}{" "}
+                              min
+                            </span>
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="watchlist-movies">
+                      {watched.length > 0 ? (
+                        <div className="movie-carousel watchlist-carousel">
+                          {watched.map((movie) => (
+                            <div
+                              key={movie.imdbID}
+                              className="movie-card"
+                              onClick={() =>
+                                handleSelectMovie(movie.imdbID, true)
+                              }
+                            >
+                              <img src={movie.Poster} alt={movie.Title} />
+                              <div className="movie-info">
+                                <h3>{movie.Title}</h3>
+                                <p>{movie.Year}</p>
+                              </div>
+                              <button
+                                className="btn-delete"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRemoveWatched(movie.imdbID);
+                                }}
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  strokeWidth={1.5}
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                                  />
+                                </svg>
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="empty-watchlist">
+                          Your watchlist is empty. Add some movies to get
+                          started!
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </section>
+
+                <section className="movie-section">
+                  <h2 className="section-heading">Discover Movies</h2>
+                  <MovieCategories onSelectMovie={handleSelectMovie} />
+                </section>
+
+                {recommendedMovies.length > 0 && (
+                  <section className="movie-section">
+                    <h2 className="section-heading">Recommended for You</h2>
+                    <div className="movie-carousel">
+                      {recommendedMovies.slice(0, 10).map((movie) => (
+                        <div
+                          key={movie.imdbID}
+                          className="movie-card"
+                          onClick={() => handleSelectMovie(movie.imdbID)}
+                        >
+                          <img src={movie.Poster} alt={movie.Title} />
+                          <div className="movie-info">
+                            <h3>{movie.Title}</h3>
+                            <p>{movie.Year}</p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </section>
-
-                  <section className="movie-section">
-                    <h2 className="section-heading">Discover Movies</h2>
-                    <MovieCategories onSelectMovie={handleSelectMovie} />
-                  </section>
-
-                  {recommendedMovies.length > 0 && (
-                    <section className="movie-section">
-                      <h2 className="section-heading">Recommended for You</h2>
-                      <div className="movie-carousel">
-                        {recommendedMovies.slice(0, 10).map((movie) => (
-                          <div
-                            key={movie.imdbID}
-                            className="movie-card"
-                            onClick={() => handleSelectMovie(movie.imdbID)}
-                          >
-                            <img src={movie.Poster} alt={movie.Title} />
-                            <div className="movie-info">
-                              <h3>{movie.Title}</h3>
-                              <p>{movie.Year}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </section>
-                  )}
-                </>
-              )}
+                )}
+              </>
             </main>
           </div>
         ) : (
-          <div className="full-width-content">{movieList}</div>
+          <div className="full-width-content">
+            <MovieCategories onSelectMovie={handleSelectMovie} />
+          </div>
         )}
       </Main>
     </>

@@ -1,12 +1,28 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import StarRating from "../StarRating";
 import Loader from "./Loader";
+
 import {
   getMovieDetails,
   getSimilarMovies,
   convertTMDBMovie,
   formatMovieDetails,
 } from "../utils/tmdbApi";
+
+import ReviewList from "./ReviewList";
+import ReviewForm from "./ReviewForm";
+import { getReviewsForMovie } from "../utils/api";
+import "./Review.css";
+import "./ReviewList.css";
+import "./ReviewForm.css";
+
+const parseJwt = (token) => {
+  try {
+    return JSON.parse(atob(token.split(".")[1]));
+  } catch (e) {
+    return null;
+  }
+};
 
 // Simple cache to store previously fetched movie details
 const movieCache = {};
@@ -33,6 +49,7 @@ function MovieDetails({
   const [isReviewSubmitted, setIsReviewSubmitted] = useState(false);
   const [similarMovies, setSimilarMovies] = useState([]);
   const [isLoadingSimilar, setIsLoadingSimilar] = useState(false);
+  const [reviews, setReviews] = useState([]);
   const controllerRef = useRef(null);
 
   // Find watched movie data if it exists
@@ -152,6 +169,44 @@ function MovieDetails({
   }, [movie.tmdbId, fetchSimilarMovies]);
 
   useEffect(() => {
+    const fetchReviews = async () => {
+      if (selectedId) {
+        const reviews = await getReviewsForMovie(selectedId);
+        setReviews(reviews);
+      }
+    };
+    fetchReviews();
+  }, [selectedId]);
+
+  const currentUserId = isAuthenticated
+    ? parseJwt(localStorage.getItem("token"))?.user?.id
+    : null;
+
+  const handleReviewAdded = (response) => {
+    const newReview = response.review; // The actual review object from the backend
+    // const message = response.message; // The message from the backend is handled in ReviewForm
+
+    setReviews((prevReviews) => {
+      const existingReviewIndex = prevReviews.findIndex(
+        (review) => review.userId === currentUserId
+      );
+
+      if (existingReviewIndex > -1) {
+        // Update existing review
+        const updatedReviews = [...prevReviews];
+        updatedReviews[existingReviewIndex] = newReview;
+        return updatedReviews;
+      } else {
+        // Add new review
+        return [newReview, ...prevReviews];
+      }
+    });
+  };
+
+  // Determine if the current user has already reviewed this movie
+  const userHasReviewed = reviews.some((review) => review.userId === currentUserId);
+
+  useEffect(() => {
     const callback = (e) => {
       if (e.key === "Escape") {
         onCloseMovie();
@@ -161,7 +216,7 @@ function MovieDetails({
     return () => {
       document.removeEventListener("keydown", callback);
     };
-  }, [onCloseMovie]);
+  }, [onCloseMovie, reviews, currentUserId]); // Added dependencies
 
   useEffect(() => {
     // Check if we already have this movie in cache
@@ -594,80 +649,14 @@ function MovieDetails({
         ) : null}
       </div>
 
+      <div className="reviews-section">
+        <ReviewList reviews={reviews} /> {/* Pass reviews as prop */}
+        {isAuthenticated && (
+          <ReviewForm movieId={selectedId} onReviewAdded={handleReviewAdded} />
+        )}
+      </div>
+
       <section>
-        {/* If movie already logged and not editing - show review only (with rating display) */}
-        {isAuthenticated && watchedMovie?.userReview && !isEditingReview && (
-          <div className="user-review">
-            <h3>Your Review</h3>
-            <div className="rating-display">
-              <div className="rating-value-inline">
-                🌟 {watchedMovie.userRating}/10
-              </div>
-            </div>
-            <p>{watchedMovie.userReview}</p>
-            <button
-              className="btn-edit-review"
-              onClick={() => {
-                setIsEditingReview(true);
-                setUserRating(watchedMovie.userRating || "");
-                setUserReview(watchedMovie.userReview || "");
-              }}
-            >
-              Edit Review
-            </button>
-          </div>
-        )}
-
-        {/* Rating form for new movie or when no review yet, or editing */}
-        {isAuthenticated && (!watchedMovie?.userReview || isEditingReview) && (
-          <form onSubmit={handleSubmit} className="rating">
-            <h3>
-              {watchedMovie
-                ? watchedMovie.userReview
-                  ? "Edit your rating"
-                  : "Add your review"
-                : "Rate this movie"}
-            </h3>
-
-            <div className="rating-stars">
-              <StarRating
-                maxRating={10}
-                size={window.innerWidth < 480 ? 20 : 24}
-                onSetRating={setUserRating}
-                color="var(--color-star)"
-                defaultRating={watchedMovie?.userRating}
-                className="star-rating-component"
-              />
-            </div>
-
-            {(userRating > 0 ||
-              watchedMovie?.userRating > 0 ||
-              (!watchedMovie && isAuthenticated)) && (
-              <>
-                <textarea
-                  className="review-input"
-                  placeholder="Write your review (optional)..."
-                  value={userReview}
-                  onChange={(e) => setUserReview(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSubmit(e);
-                    }
-                  }}
-                />
-                <button type="submit" className="btn-add">
-                  {watchedMovie
-                    ? watchedMovie.userReview
-                      ? "Update review"
-                      : "Save review"
-                    : "+ Add to list"}
-                </button>
-              </>
-            )}
-          </form>
-        )}
-
         {showSuccessPrompt && (
           <div className="success-prompt">{showSuccessPrompt}</div>
         )}
