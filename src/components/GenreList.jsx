@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { getGenres } from '../utils/tmdbApi';
-import './GenreList.css';
+import React, { useState, useEffect } from "react";
+import { getGenres } from "../utils/tmdbApi";
+import "./GenreList.css";
 
 const GenreList = ({ onGenreSelect }) => {
   const [genres, setGenres] = useState([]);
@@ -13,7 +13,7 @@ const GenreList = ({ onGenreSelect }) => {
         const genreData = await getGenres();
         setGenres(genreData.genres);
       } catch (err) {
-        setError('Failed to load genres.');
+        setError("Failed to load genres.");
       } finally {
         setIsLoading(false);
       }
@@ -43,12 +43,6 @@ const GenreList = ({ onGenreSelect }) => {
             {genre.name}
           </button>
         ))}
-        <button
-          className="genre-button surprise-me-button"
-          onClick={() => onGenreSelect('surprise')}
-        >
-          🎉 Surprise Me!
-        </button>
       </div>
     </div>
   );

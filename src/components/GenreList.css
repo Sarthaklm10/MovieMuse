@@ -37,10 +37,7 @@
   border-color: #fff;
 }
 
-.surprise-me-button {
-  background-color: #ff6347; /* Tomato color */
-  animation: pulse 2s infinite;
-}
+
 
 @keyframes pulse {
   0% {

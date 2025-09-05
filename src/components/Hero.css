@@ -18,7 +18,7 @@
   right: 0;
   bottom: 0;
   background-size: cover;
-  background-position: center center;
+  background-position: center top;
   transition: transform 0.4s ease;
 }
 

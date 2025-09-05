@@ -99,26 +99,26 @@ export const removeFromWatchlist = (imdbID) =>
   });
 
 // New movie discovery endpoints
-export const getTrendingMovies = () =>
+export const getTrendingMovies = (page = 1) =>
   cachedRequest(
-    "trendingMovies",
-    "/movies/trending",
+    `trendingMovies-page-${page}`,
+    `/movies/trending?page=${page}`,
     {},
     FALLBACK_MOVIES.trending
   );
 
-export const getNewReleases = () =>
+export const getNewReleases = (page = 1) =>
   cachedRequest(
-    "newReleasesMovies",
-    "/movies/new-releases",
+    `newReleasesMovies-page-${page}`,
+    `/movies/new-releases?page=${page}`,
     {},
     FALLBACK_MOVIES.newReleases
   );
 
-export const getTopRatedMovies = () =>
+export const getTopRatedMovies = (page = 1) =>
   cachedRequest(
-    "topRatedMovies",
-    "/movies/top-rated",
+    `topRatedMovies-page-${page}`,
+    `/movies/top-rated?page=${page}`,
     {},
     FALLBACK_MOVIES.topRated
   );

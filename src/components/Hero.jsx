@@ -24,19 +24,15 @@ const Hero = ({ onSelectMovie }) => {
         }
 
         if (moviesToProcess && moviesToProcess.length > 0) {
-          let heroCandidate = moviesToProcess.find(
-            (movie) => movie.Poster || movie.poster_path || movie.backdrop_path // Prioritize converted, then raw TMDB
-          );
+          // Find a movie that has a backdrop path
+          let heroCandidate = moviesToProcess.find((movie) => movie.backdrop_path);
 
-          if (heroCandidate && !isFallbackData && heroCandidate.poster_path) {
+          if (heroCandidate) {
             // If it's a raw TMDB movie and not fallback, convert it
-            heroCandidate = convertTMDBMovie(heroCandidate);
-          }
-
-          const suitableMovie = heroCandidate;
-
-          if (suitableMovie) {
-            setHeroMovie(suitableMovie);
+            if (!isFallbackData) {
+              heroCandidate = convertTMDBMovie(heroCandidate);
+            }
+            setHeroMovie(heroCandidate);
           } else {
             setError(
               "Could not find a trending movie with a suitable backdrop."
@@ -76,6 +72,9 @@ const Hero = ({ onSelectMovie }) => {
     return null;
   }
 
+  // Always use the backdrop_path for the hero image
+  const heroImageUrl = heroMovie.backdrop_path;
+
   return (
     <div
       className="hero-container"
@@ -84,7 +83,7 @@ const Hero = ({ onSelectMovie }) => {
       <div
         className="hero-background"
         style={{
-          backgroundImage: `url(${heroMovie.Poster})`,
+          backgroundImage: `url(${heroImageUrl})`,
         }}
       />
       <div className="hero-content">

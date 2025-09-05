@@ -14,20 +14,21 @@ const cache = {};
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 // Helper function for TMDB calls with caching + fallback
-async function fetchFromTMDB(endpoint, cacheKey) {
-  if (!TMDB_API_KEY || TMDB_API_KEY === "your_tmdb_api_key_here") {
-    throw new Error("TMDB_API_KEY not configured.");
+async function fetchFromTMDB(endpoint, cacheKey, page = 1) {
+  if (!TMDB_API_KEY || TMDB_API_KEY === 'your_tmdb_api_key_here') {
+    throw new Error('TMDB_API_KEY not configured.');
   }
   const now = Date.now();
+  const pageCacheKey = `${cacheKey}-page-${page}`;
 
   // Return cached data if still valid
-  if (cache[cacheKey] && now - cache[cacheKey].timestamp < CACHE_DURATION) {
-    return cache[cacheKey].data;
+  if (cache[pageCacheKey] && now - cache[pageCacheKey].timestamp < CACHE_DURATION) {
+    return cache[pageCacheKey].data;
   }
 
   try {
-    const separator = endpoint.includes("?") ? "&" : "?";
-    const url = `${TMDB_BASE_URL}${endpoint}${separator}api_key=${TMDB_API_KEY}&language=en-US`;
+    const separator = endpoint.includes('?') ? '&' : '?';
+    const url = `${TMDB_BASE_URL}${endpoint}${separator}api_key=${TMDB_API_KEY}&language=en-US&page=${page}`;
 
     const res = await fetch(url);
     if (!res.ok) {
@@ -37,19 +38,19 @@ async function fetchFromTMDB(endpoint, cacheKey) {
     const data = await res.json();
 
     // Store in cache
-    cache[cacheKey] = {
+    cache[pageCacheKey] = {
       data,
       timestamp: now,
     };
 
     return data;
   } catch (err) {
-    console.error(`Error fetching ${cacheKey} from TMDB:`, err.message);
+    console.error(`Error fetching ${pageCacheKey} from TMDB:`, err.message);
 
     // Fallback to cached data if available
-    if (cache[cacheKey]) {
-      console.warn(`Serving stale cache for ${cacheKey}`);
-      return cache[cacheKey].data;
+    if (cache[pageCacheKey]) {
+      console.warn(`Serving stale cache for ${pageCacheKey}`);
+      return cache[pageCacheKey].data;
     }
 
     throw err; // No cache available, rethrow error
@@ -57,36 +58,39 @@ async function fetchFromTMDB(endpoint, cacheKey) {
 }
 
 // Routes
-router.get("/trending", async (req, res) => {
+router.get('/trending', async (req, res) => {
   try {
-    const data = await fetchFromTMDB("/trending/movie/week", "trending");
-    res.set("Cache-Control", "public, max-age=300"); // 5 minutes
+    const page = parseInt(req.query.page, 10) || 1;
+    const data = await fetchFromTMDB('/trending/movie/week', 'trending', page);
+    res.set('Cache-Control', 'public, max-age=300'); // 5 minutes
     res.json(data.results);
   } catch (err) {
     res.status(500).json({ msg: err.message });
   }
 });
 
-router.get("/new-releases", async (req, res) => {
+router.get('/new-releases', async (req, res) => {
   try {
-    const today = new Date().toISOString().split("T")[0];
+    const page = parseInt(req.query.page, 10) || 1;
+    const today = new Date().toISOString().split('T')[0];
     const lastMonth = new Date();
     lastMonth.setMonth(lastMonth.getMonth() - 1);
-    const lastMonthStr = lastMonth.toISOString().split("T")[0];
+    const lastMonthStr = lastMonth.toISOString().split('T')[0];
 
     const endpoint = `/discover/movie?primary_release_date.gte=${lastMonthStr}&primary_release_date.lte=${today}&sort_by=release_date.desc`;
-    const data = await fetchFromTMDB(endpoint, "new-releases");
-    res.set("Cache-Control", "public, max-age=300"); // 5 minutes
+    const data = await fetchFromTMDB(endpoint, 'new-releases', page);
+    res.set('Cache-Control', 'public, max-age=300'); // 5 minutes
     res.json(data.results);
   } catch (err) {
     res.status(500).json({ msg: err.message });
   }
 });
 
-router.get("/top-rated", async (req, res) => {
+router.get('/top-rated', async (req, res) => {
   try {
-    const data = await fetchFromTMDB("/movie/top_rated", "top-rated");
-    res.set("Cache-Control", "public, max-age=300"); // 5 minutes
+    const page = parseInt(req.query.page, 10) || 1;
+    const data = await fetchFromTMDB('/movie/top_rated', 'top-rated', page);
+    res.set('Cache-Control', 'public, max-age=300'); // 5 minutes
     res.json(data.results);
   } catch (err) {
     res.status(500).json({ msg: err.message });
